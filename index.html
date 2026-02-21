@@ -1621,6 +1621,7 @@ const SyncEngine = {
   lastActivity: Date.now(),
   pushing: false,
   polling: false,
+  dirty: false,
 
   start() {
     if (!SYNC_URL) return;
@@ -1645,6 +1646,7 @@ const SyncEngine = {
   scheduleAutoSync() {
     if (!SYNC_URL) return;
     this.lastActivity = Date.now();
+    this.dirty = true;
     // Adaptive: quay lại poll nhanh khi có activity
     if (this.pollInterval !== 5000) {
       this.pollInterval = 5000;
@@ -1657,6 +1659,8 @@ const SyncEngine = {
   async push() {
     if (!SYNC_URL || this.pushing || !db) return;
     this.pushing = true;
+    this.pushTimer = null;
+    this.dirty = false;
     this.setDot('orange');
     try {
       const groups = await getAllGroups();
@@ -1684,10 +1688,14 @@ const SyncEngine = {
       console.warn('Auto-push error:', e.message);
     }
     this.pushing = false;
+    // Nếu có thay đổi mới trong lúc push → push lại
+    if (this.dirty) {
+      this.pushTimer = setTimeout(() => this.push(), 500);
+    }
   },
 
   async poll() {
-    if (!SYNC_URL || this.polling || this.pushing || !db) return;
+    if (!SYNC_URL || this.polling || this.pushing || this.pushTimer || !db) return;
     // Adaptive polling: giãn nếu idle
     if (Date.now() - this.lastActivity > this.idleTimeout && this.pollInterval !== this.idlePollInterval) {
       this.pollInterval = this.idlePollInterval;
