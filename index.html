@@ -1100,7 +1100,7 @@ async function saveGroup() {
 
 async function confirmDeleteGroup(id) {
   const gr = allGroups.find(g => g.id === id);
-  if (!gr) return;
+  if (!gr) { console.warn('confirmDeleteGroup: không tìm thấy group id=', id, 'allGroups ids=', allGroups.map(g=>g.id)); showToast('Lỗi: không tìm thấy nhóm, thử reload trang', 'error'); return; }
   const count = allGuests.filter(g => g.groupId === id).length;
   if (!confirm(`Xóa nhóm "${gr.name}" và ${count} khách trong nhóm?`)) return;
   await deleteGuestsByGroup(id);
@@ -1169,7 +1169,7 @@ async function saveGuest() {
 
 async function confirmDeleteGuest(id) {
   const gt = allGuests.find(g => g.id === id);
-  if (!gt) return;
+  if (!gt) { console.warn('confirmDeleteGuest: không tìm thấy guest id=', id, 'allGuests ids=', allGuests.map(g=>g.id)); showToast('Lỗi: không tìm thấy khách, thử reload trang', 'error'); return; }
   if (!confirm(`Xóa khách "${gt.name}"?`)) return;
   await deleteGuest(id);
   showToast('Đã xóa khách', 'success');
