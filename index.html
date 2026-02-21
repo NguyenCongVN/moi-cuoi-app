@@ -1722,6 +1722,13 @@ const SyncEngine = {
 
   async applyRemoteData(cloudGroups, cloudGuestsRaw) {
     const cloudGuests = guestsFromSheetFormat(cloudGuestsRaw || []);
+    // Lưu tên các group đang mở để khôi phục sau import
+    const openGroupNames = new Set();
+    for (const id of openGroupIds) {
+      const gr = allGroups.find(g => g.id === id);
+      if (gr) openGroupNames.add(gr.name);
+    }
+    const savedClosedCats = new Set(closedCategoryNames);
     await clearAll();
     const idMap = {};
     for (const gr of cloudGroups) {
@@ -1736,7 +1743,14 @@ const SyncEngine = {
       gt.groupId = idMap[gt.groupId] || gt.groupId;
       await addGuest(gt);
     }
+    // Khôi phục trạng thái mở/đóng
     await loadAndRender();
+    openGroupIds.clear();
+    for (const gr of allGroups) {
+      if (openGroupNames.has(gr.name)) openGroupIds.add(gr.id);
+    }
+    closedCategoryNames = savedClosedCats;
+    renderTree();
   },
 
   setDot(color) {
