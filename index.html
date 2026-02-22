@@ -918,7 +918,8 @@ function renderTree() {
 }
 
 function escHtml(s) {
-  if (!s) return '';
+  if (s === null || s === undefined || s === '') return '';
+  s = String(s);
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
@@ -1462,11 +1463,11 @@ function guestsFromSheetFormat(sheetGuests) {
     return {
       id: g.id,
       groupId: g.groupId,
-      name: g.name,
+      name: String(g.name || ''),
       count: parseInt(g.count) || 0,
       invited: g.invited === true || g.invited === 'TRUE',
       meal,
-      note: g.note || '',
+      note: String(g.note || ''),
       order: parseInt(g.order) || 0
     };
   });
@@ -1533,6 +1534,9 @@ async function syncFromCloud() {
       for (const gr of cloudGroups) {
         const oldId = gr.id;
         delete gr.id;
+        gr.name = String(gr.name || '');
+        gr.category = String(gr.category || '');
+        gr.merged = String(gr.merged || '');
         gr.order = parseInt(gr.order) || 0;
         const newId = await addGroup(gr);
         idMap[oldId] = newId;
@@ -1742,6 +1746,9 @@ const SyncEngine = {
     for (const gr of cloudGroups) {
       const oldId = gr.id;
       delete gr.id;
+      gr.name = String(gr.name || '');
+      gr.category = String(gr.category || '');
+      gr.merged = String(gr.merged || '');
       gr.order = parseInt(gr.order) || 0;
       const newId = await addGroup(gr);
       idMap[oldId] = newId;
