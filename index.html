@@ -219,6 +219,10 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
     <div class="num" id="stat-sang12_9h" style="color:#e91e63;">0</div>
     <div class="label">Sáng 12 - 9h (người)</div>
   </div>
+  <div class="stat-card" style="border-left: 3px solid #ff5722; cursor:pointer;" onclick="showUnconfirmedList()" title="Click để xem danh sách">
+    <div class="num" id="stat-unconfirmed" style="color:#ff5722;">0</div>
+    <div class="label">Đã mời, chưa chốt cỗ</div>
+  </div>
 </div>
 
 <div class="category-stats" id="category-stats-section" style="display:none">
@@ -359,6 +363,18 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
     <div class="btn-row" style="margin-top:12px;">
       <button class="btn btn-outline" onclick="closeModal('modal-csv')">Hủy</button>
       <button class="btn btn-primary" onclick="doExportCSV()">Xuất CSV</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Danh sách chưa chốt cỗ -->
+<div class="modal-overlay" id="modal-unconfirmed">
+  <div class="modal" style="max-width:500px;">
+    <h3 style="color:#ff5722;">Đã mời nhưng chưa chốt cỗ</h3>
+    <p style="font-size:0.8em;color:var(--text-light);margin-bottom:10px;">Những người đã được mời nhưng chưa tick chọn buổi ăn cỗ nào.</p>
+    <div id="unconfirmed-list" style="max-height:60vh;overflow-y:auto;"></div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="closeModal('modal-unconfirmed')">Đóng</button>
     </div>
   </div>
 </div>
@@ -777,6 +793,10 @@ function renderStats() {
     document.getElementById('stat-' + m.key).textContent = people;
   }
 
+  // Thống kê đã mời nhưng chưa chốt cỗ (invited nhưng meal rỗng)
+  const unconfirmedCount = allGuests.filter(g => g.invited && !(g.meal || []).length).length;
+  document.getElementById('stat-unconfirmed').textContent = unconfirmedCount;
+
   renderCategoryStats();
 }
 
@@ -966,6 +986,39 @@ function collapseAll() {
 function toggleCategoryStats() {
   const sec = document.getElementById('category-stats-section');
   sec.style.display = sec.style.display === 'none' ? '' : 'none';
+}
+
+function showUnconfirmedList() {
+  const unconfirmed = allGuests.filter(g => g.invited && !(g.meal || []).length);
+  const listEl = document.getElementById('unconfirmed-list');
+
+  if (unconfirmed.length === 0) {
+    listEl.innerHTML = '<p style="text-align:center;padding:20px;color:#999;">Tất cả đã chốt cỗ!</p>';
+  } else {
+    // Nhóm theo group
+    const byGroup = {};
+    for (const g of unconfirmed) {
+      if (!byGroup[g.groupId]) byGroup[g.groupId] = [];
+      byGroup[g.groupId].push(g);
+    }
+
+    let html = '';
+    for (const [groupId, guests] of Object.entries(byGroup)) {
+      const gr = allGroups.find(g => g.id === parseInt(groupId));
+      const groupName = gr ? gr.name : 'Không rõ';
+      html += `<div style="margin-bottom:10px;">
+        <div style="font-weight:600;font-size:0.9em;color:var(--primary);padding:4px 0;border-bottom:1px solid #f0f0f0;">${escHtml(groupName)}</div>`;
+      for (const gt of guests) {
+        html += `<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;font-size:0.85em;">
+          <span style="flex:1;">${escHtml(gt.name)}</span>
+          <span style="color:var(--text-light);font-size:0.8em;">${gt.count || '?'} người</span>
+        </div>`;
+      }
+      html += '</div>';
+    }
+    listEl.innerHTML = html;
+  }
+  openModal('modal-unconfirmed');
 }
 
 // ===================== GUEST ACTIONS =====================
