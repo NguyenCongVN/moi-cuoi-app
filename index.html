@@ -133,6 +133,7 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
 .meal-tag[data-meal="chieu11"].active { background: #ff9800; }
 .meal-tag[data-meal="sang12"].active { background: #9c27b0; }
 .meal-tag[data-meal="sang12_9h"].active { background: #e91e63; }
+.meal-tag[data-meal="no_meal"].active { background: #795548; }
 .meal-tag:hover { opacity: 0.8; }
 .meal-checkboxes { display: flex; gap: 10px; flex-wrap: wrap; }
 .meal-checkboxes label { display: flex; align-items: center; gap: 4px; font-size: 0.9em; cursor: pointer; }
@@ -145,6 +146,7 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
 .meal-stat-badge.chieu11 { background: #ff9800; }
 .meal-stat-badge.sang12 { background: #9c27b0; }
 .meal-stat-badge.sang12_9h { background: #e91e63; }
+.meal-stat-badge.no_meal { background: #795548; }
 
 /* Hidden file input */
 .hidden { display: none; }
@@ -219,6 +221,10 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
     <div class="num" id="stat-sang12_9h" style="color:#e91e63;">0</div>
     <div class="label">Sáng 12 - 9h (người)</div>
   </div>
+  <div class="stat-card" style="border-left: 3px solid #795548;">
+    <div class="num" id="stat-no_meal" style="color:#795548;">0</div>
+    <div class="label">Không ăn cỗ (người)</div>
+  </div>
   <div class="stat-card" style="border-left: 3px solid #ff5722; cursor:pointer;" onclick="showUnconfirmedList()" title="Click để xem danh sách">
     <div class="num" id="stat-unconfirmed" style="color:#ff5722;">0</div>
     <div class="label">Đã mời, chưa chốt cỗ</div>
@@ -243,6 +249,7 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
     <option value="chieu11">Chiều 11</option>
     <option value="sang12">Sáng 12 (7h)</option>
     <option value="sang12_9h">Sáng 12 (9h)</option>
+    <option value="no_meal">Không ăn cỗ</option>
     <option value="none">Chưa chọn buổi</option>
   </select>
   <div class="expand-btns">
@@ -794,8 +801,12 @@ function renderStats() {
     document.getElementById('stat-' + m.key).textContent = people;
   }
 
-  // Thống kê đã mời nhưng chưa chốt cỗ (invited nhưng meal rỗng)
-  const unconfirmedCount = allGuests.filter(g => g.invited && !(g.meal || []).length).length;
+  // Thống kê không ăn cỗ
+  const noMealPeople = allGuests.filter(g => g.noMeal).reduce((s, g) => s + (g.count || 0), 0);
+  document.getElementById('stat-no_meal').textContent = noMealPeople;
+
+  // Thống kê đã mời nhưng chưa chốt cỗ (invited nhưng meal rỗng và chưa đánh dấu không ăn cỗ)
+  const unconfirmedCount = allGuests.filter(g => g.invited && !(g.meal || []).length && !g.noMeal).length;
   document.getElementById('stat-unconfirmed').textContent = unconfirmedCount;
 
   renderCategoryStats();
@@ -858,7 +869,8 @@ function renderTree() {
       else if (filterStatus === 'pending') filteredGuests = guestsInGroup.filter(g => !g.invited);
       else if (filterStatus === 'invited_no_meal') filteredGuests = guestsInGroup.filter(g => g.invited && !(g.meal || []).length);
 
-      if (filterMeal === 'none') filteredGuests = filteredGuests.filter(g => !(g.meal || []).length);
+      if (filterMeal === 'none') filteredGuests = filteredGuests.filter(g => !(g.meal || []).length && !g.noMeal);
+      else if (filterMeal === 'no_meal') filteredGuests = filteredGuests.filter(g => g.noMeal);
       else if (filterMeal !== 'all') filteredGuests = filteredGuests.filter(g => (g.meal || []).includes(filterMeal));
 
       if (searchTerm) {
@@ -878,6 +890,8 @@ function renderTree() {
         const mp = guestsInGroup.filter(g => (g.meal || []).includes(m.key)).reduce((s, g) => s + (g.count || 0), 0);
         if (mp > 0) mealStatsHtml += `<span class="meal-stat-badge ${m.key}">${m.short}: ${mp}</span>`;
       }
+      const noMealP = guestsInGroup.filter(g => g.noMeal).reduce((s, g) => s + (g.count || 0), 0);
+      if (noMealP > 0) mealStatsHtml += `<span class="meal-stat-badge no_meal">KCỗ: ${noMealP}</span>`;
 
       let guestRows = '';
       const displayGuests = searchTerm || filterStatus !== 'all' ? filteredGuests : guestsInGroup;
@@ -889,6 +903,8 @@ function renderTree() {
           const active = guestMeal.includes(m.key) ? 'active' : '';
           mealHtml += `<span class="meal-tag ${active}" data-meal="${m.key}" onclick="toggleMeal(${gt.id},'${m.key}',this)" title="${m.label}">${m.short}</span>`;
         }
+        const noMealActive = gt.noMeal ? 'active' : '';
+        mealHtml += `<span class="meal-tag ${noMealActive}" data-meal="no_meal" onclick="toggleNoMeal(${gt.id},this)" title="Không ăn cỗ">KCỗ</span>`;
         mealHtml += '</span>';
         guestRows += `<div class="guest-row ${gt.invited ? 'invited' : ''}">
           <input type="checkbox" class="guest-check" ${gt.invited ? 'checked' : ''} onchange="toggleInvited(${gt.id}, this.checked, this)" title="Đánh dấu đã mời">
@@ -991,7 +1007,7 @@ function toggleCategoryStats() {
 }
 
 function showUnconfirmedList() {
-  const unconfirmed = allGuests.filter(g => g.invited && !(g.meal || []).length);
+  const unconfirmed = allGuests.filter(g => g.invited && !(g.meal || []).length && !g.noMeal);
   const listEl = document.getElementById('unconfirmed-list');
 
   if (unconfirmed.length === 0) {
@@ -1070,6 +1086,31 @@ async function toggleMeal(guestId, mealKey, tagEl) {
   } else {
     guest.meal.push(mealKey);
     tagEl.classList.add('active');
+    // Bỏ "Không ăn cỗ" khi chọn buổi
+    if (guest.noMeal) {
+      guest.noMeal = false;
+      const row = tagEl.closest('.meal-tags');
+      if (row) { const noTag = row.querySelector('.meal-tag[data-meal="no_meal"]'); if (noTag) noTag.classList.remove('active'); }
+    }
+  }
+  await putGuest(guest);
+  renderStats();
+  SyncEngine.scheduleAutoSync();
+}
+
+async function toggleNoMeal(guestId, tagEl) {
+  const guest = allGuests.find(g => g.id === guestId);
+  if (!guest) return;
+  guest.noMeal = !guest.noMeal;
+  if (guest.noMeal) {
+    // Bỏ tất cả buổi cỗ khi đánh dấu không ăn cỗ
+    guest.meal = [];
+    tagEl.classList.add('active');
+    // Bỏ active các meal tag khác
+    const row = tagEl.closest('.meal-tags');
+    if (row) row.querySelectorAll('.meal-tag[data-meal]:not([data-meal="no_meal"])').forEach(t => t.classList.remove('active'));
+  } else {
+    tagEl.classList.remove('active');
   }
   await putGuest(guest);
   renderStats();
