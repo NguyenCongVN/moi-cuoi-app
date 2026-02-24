@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý danh sách mời cưới - Họ nhà Gái</title>
+<style>
+:root {
+  --primary: #1565c0;
+  --primary-light: #e3f2fd;
+  --primary-dark: #0d47a1;
+  --success: #4caf50;
+  --success-light: #e8f5e9;
+  --warning: #ff9800;
+  --danger: #f44336;
+  --bg: #fafafa;
+  --card-bg: #fff;
+  --text: #333;
+  --text-light: #777;
+  --border: #e0e0e0;
+  --shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+
+/* Header */
+.header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; padding: 20px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.header h1 { font-size: 1.4em; margin-bottom: 4px; }
+.header .subtitle { font-size: 0.9em; opacity: 0.9; }
+
+/* Stats Cards */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; padding: 15px; max-width: 900px; margin: 0 auto; }
+.stat-card { background: var(--card-bg); border-radius: 10px; padding: 12px; text-align: center; box-shadow: var(--shadow); }
+.stat-card .num { font-size: 1.8em; font-weight: 700; }
+.stat-card .label { font-size: 0.75em; color: var(--text-light); margin-top: 2px; }
+.stat-card.total .num { color: var(--primary); }
+.stat-card.invited .num { color: var(--success); }
+.stat-card.pending .num { color: var(--warning); }
+.stat-card.groups .num { color: #2196f3; }
+
+/* Toolbar */
+.toolbar { padding: 10px 15px; max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.toolbar input[type="text"] { flex: 1; min-width: 150px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9em; outline: none; }
+.toolbar input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-light); }
+.toolbar select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85em; background: #fff; outline: none; }
+.btn { padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85em; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { background: #388e3c; }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-outline:hover { background: #f5f5f5; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: #d32f2f; }
+.btn-sm { padding: 4px 8px; font-size: 0.8em; }
+
+/* Tree */
+.tree-container { max-width: 900px; margin: 0 auto; padding: 0 15px 100px; }
+.category-block { margin-bottom: 15px; }
+.category-header { background: var(--primary); color: #fff; padding: 10px 15px; border-radius: 10px 10px 0 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+.category-header h2 { font-size: 1em; }
+.category-header .badge { background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
+.category-content { background: var(--card-bg); border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; }
+.group-item { border-bottom: 1px solid #f0f0f0; }
+.group-item:last-child { border-bottom: none; }
+.group-header { padding: 8px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; transition: background 0.15s; }
+.group-header:hover { background: #f8f8f8; }
+.group-header .left { display: flex; align-items: center; gap: 8px; flex: 1; }
+.group-header .arrow { transition: transform 0.2s; font-size: 0.7em; color: var(--text-light); }
+.group-header .arrow.open { transform: rotate(90deg); }
+.group-header .group-name { font-weight: 600; font-size: 0.9em; }
+.group-header .group-count { font-size: 0.75em; color: var(--text-light); }
+.group-header .actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; }
+.group-header:hover .actions { opacity: 1; }
+.guest-list { padding: 0 15px 8px 35px; display: none; }
+.guest-list.open { display: block; }
+.guest-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #f8f8f8; font-size: 0.85em; }
+.guest-row:last-child { border-bottom: none; }
+.guest-row.invited { color: var(--success); }
+.guest-row .guest-check { width: 18px; height: 18px; accent-color: var(--success); cursor: pointer; }
+.guest-row .guest-name { flex: 1; }
+.guest-row .guest-count { color: var(--text-light); font-size: 0.8em; min-width: 30px; text-align: center; }
+.guest-row .guest-note { color: var(--text-light); font-size: 0.75em; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.guest-row .guest-actions { display: flex; gap: 2px; opacity: 0; transition: opacity 0.2s; }
+.guest-row:hover .guest-actions { opacity: 1; }
+.add-guest-btn { padding: 6px 10px; margin: 4px 0 8px; font-size: 0.8em; color: var(--primary); background: none; border: 1px dashed var(--primary); border-radius: 6px; cursor: pointer; width: 100%; }
+.add-guest-btn:hover { background: var(--primary-light); }
+mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
+
+/* Category Stats */
+.category-stats { max-width: 900px; margin: 0 auto; padding: 10px 15px; }
+.cat-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.cat-stat-item { background: var(--card-bg); border-radius: 8px; padding: 10px; box-shadow: var(--shadow); font-size: 0.85em; }
+.cat-stat-item .cat-name { font-weight: 600; margin-bottom: 4px; }
+.cat-stat-item .cat-detail { color: var(--text-light); font-size: 0.8em; }
+
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
+.modal-overlay.active { display: flex; }
+.modal { background: var(--card-bg); border-radius: 12px; padding: 20px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+.modal h3 { margin-bottom: 15px; font-size: 1.1em; }
+.modal .form-group { margin-bottom: 12px; }
+.modal label { display: block; font-size: 0.85em; font-weight: 500; margin-bottom: 4px; }
+.modal input, .modal select, .modal textarea { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9em; outline: none; }
+.modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--primary); }
+.modal textarea { resize: vertical; min-height: 60px; }
+.modal .btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 15px; }
+
+/* Toast */
+.toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: #333; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 0.85em; animation: slideIn 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* Expand/Collapse buttons */
+.expand-btns { display: flex; gap: 6px; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .toolbar { flex-direction: column; }
+  .toolbar input[type="text"] { width: 100%; }
+  .group-header .actions { opacity: 1; }
+  .guest-row .guest-actions { opacity: 1; }
+}
+
+/* Meal tags */
+.meal-tags { display: inline-flex; gap: 3px; margin-left: 4px; }
+.meal-tag { font-size: 0.65em; padding: 1px 5px; border-radius: 4px; cursor: pointer; user-select: none; border: 1px solid var(--border); background: #f5f5f5; color: var(--text-light); transition: all 0.15s; line-height: 1.4; }
+.meal-tag.active { border-color: transparent; color: #fff; font-weight: 600; }
+.meal-tag[data-meal="trua11"].active { background: #2196f3; }
+.meal-tag[data-meal="chieu11"].active { background: #ff9800; }
+.meal-tag[data-meal="sang12"].active { background: #9c27b0; }
+.meal-tag[data-meal="sang12_9h"].active { background: #1565c0; }
+.meal-tag:hover { opacity: 0.8; }
+.meal-checkboxes { display: flex; gap: 10px; flex-wrap: wrap; }
+.meal-checkboxes label { display: flex; align-items: center; gap: 4px; font-size: 0.9em; cursor: pointer; }
+.meal-checkboxes input { accent-color: var(--primary); }
+
+/* Meal stats */
+.meal-stat-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.meal-stat-badge { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; color: #fff; }
+.meal-stat-badge.trua11 { background: #2196f3; }
+.meal-stat-badge.chieu11 { background: #ff9800; }
+.meal-stat-badge.sang12 { background: #9c27b0; }
+.meal-stat-badge.sang12_9h { background: #1565c0; }
+
+/* Hidden file input */
+.hidden { display: none; }
+
+/* Sync UI */
+.sync-bar { display: flex; align-items: center; gap: 8px; padding: 6px 15px; max-width: 900px; margin: 0 auto; flex-wrap: wrap; }
+.sync-status { font-size: 0.75em; color: var(--text-light); }
+.sync-status.syncing { color: var(--primary); }
+.sync-status.success { color: var(--success); }
+.sync-status.error { color: var(--danger); }
+.btn-sync { background: #2196f3; color: #fff; }
+.btn-sync:hover { background: #1976d2; }
+.btn-sync-pull { background: #ff9800; color: #fff; }
+.btn-sync-pull:hover { background: #f57c00; }
+.btn-sync-setup { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-sync-setup:hover { background: #f5f5f5; }
+.sync-spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Sync Modal */
+.sync-url-input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85em; outline: none; margin-bottom: 8px; }
+.sync-url-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-light); }
+.sync-help { font-size: 0.75em; color: var(--text-light); margin-bottom: 12px; line-height: 1.6; }
+
+/* Sync Indicator */
+.sync-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.sync-dot.green { background: var(--success); }
+.sync-dot.orange { background: var(--warning); animation: pulse 1s infinite; }
+.sync-dot.red { background: var(--danger); }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.sync-ago { font-size: 0.75em; color: var(--text-light); }
+.toast.info { background: #2196f3; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Danh sách mời cưới</h1>
+  <div class="subtitle">Họ nhà Gái - Thu Hoài | 11/1 Tết | v2.0-realtime</div>
+</div>
+
+<div class="stats" id="stats">
+  <div class="stat-card total">
+    <div class="num" id="stat-total-guests">0</div>
+    <div class="label">Tổng người</div>
+  </div>
+  <div class="stat-card invited">
+    <div class="num" id="stat-invited">0</div>
+    <div class="label">Đã mời (người)</div>
+  </div>
+  <div class="stat-card pending">
+    <div class="num" id="stat-pending">0</div>
+    <div class="label">Chưa mời (người)</div>
+  </div>
+  <div class="stat-card groups">
+    <div class="num" id="stat-groups">0</div>
+    <div class="label">Nhóm</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #2196f3;">
+    <div class="num" id="stat-trua11" style="color:#2196f3;">0</div>
+    <div class="label">Trưa 11 (người)</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #ff9800;">
+    <div class="num" id="stat-chieu11" style="color:#ff9800;">0</div>
+    <div class="label">Chiều 11 (người)</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #9c27b0;">
+    <div class="num" id="stat-sang12" style="color:#9c27b0;">0</div>
+    <div class="label">Sáng 12 - 7h (người)</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #e91e63;">
+    <div class="num" id="stat-sang12_9h" style="color:#e91e63;">0</div>
+    <div class="label">Sáng 12 - 9h (người)</div>
+  </div>
+</div>
+
+<div class="category-stats" id="category-stats-section" style="display:none">
+  <div class="cat-stat-grid" id="cat-stat-grid"></div>
+</div>
+
+<div class="toolbar">
+  <input type="text" id="search-input" placeholder="Tìm tên khách...">
+  <select id="filter-status">
+    <option value="all">Tất cả</option>
+    <option value="invited">Đã mời</option>
+    <option value="pending">Chưa mời</option>
+  </select>
+  <select id="filter-meal">
+    <option value="all">Mọi buổi</option>
+    <option value="trua11">Trưa 11</option>
+    <option value="chieu11">Chiều 11</option>
+    <option value="sang12">Sáng 12 (7h)</option>
+    <option value="sang12_9h">Sáng 12 (9h)</option>
+    <option value="none">Chưa chọn buổi</option>
+  </select>
+  <div class="expand-btns">
+    <button class="btn btn-outline btn-sm" onclick="expandAll()">Mở hết</button>
+    <button class="btn btn-outline btn-sm" onclick="collapseAll()">Thu gọn</button>
+  </div>
+  <button class="btn btn-outline btn-sm" onclick="toggleCategoryStats()">Thống kê</button>
+  <button class="btn btn-primary btn-sm" onclick="openAddGroup()">+ Nhóm</button>
+  <button class="btn btn-outline btn-sm" onclick="exportData()">Xuất</button>
+  <button class="btn btn-outline btn-sm" onclick="openExportCSV()">Xuất CSV</button>
+  <button class="btn btn-outline btn-sm" onclick="document.getElementById('import-file').click()">Nhập</button>
+  <button class="btn btn-outline btn-sm" onclick="resetData()">Reset</button>
+  <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
+</div>
+
+<div class="sync-bar" id="sync-bar">
+  <span class="sync-dot green" id="sync-dot"></span>
+  <span class="sync-ago" id="sync-ago"></span>
+  <button class="btn btn-sync btn-sm" onclick="syncToCloud()" id="btn-push" title="Đẩy dữ liệu lên Google Sheet">&#8679; Đẩy lên</button>
+  <button class="btn btn-sync-pull btn-sm" onclick="syncFromCloud()" id="btn-pull" title="Kéo dữ liệu từ Google Sheet về">&#8681; Kéo về</button>
+  <button class="btn btn-sync-setup btn-sm" onclick="openSyncSetup()" title="Cấu hình đồng bộ">&#9881; Sync</button>
+  <span class="sync-status" id="sync-status"></span>
+</div>
+
+<div class="tree-container" id="tree"></div>
+
+<!-- Modal Nhóm -->
+<div class="modal-overlay" id="modal-group">
+  <div class="modal">
+    <h3 id="modal-group-title">Thêm nhóm</h3>
+    <div class="form-group">
+      <label>Tên nhóm</label>
+      <input type="text" id="group-name-input" placeholder="Gia đình cụ...">
+    </div>
+    <div class="form-group">
+      <label>Danh mục</label>
+      <select id="group-category-input" onchange="if(this.value==='__custom__'){document.getElementById('group-category-custom').style.display='block';document.getElementById('group-category-custom').focus();}else{document.getElementById('group-category-custom').style.display='none';}">
+      </select>
+      <input type="text" id="group-category-custom" placeholder="Nhập tên danh mục mới..." style="display:none;margin-top:6px;">
+    </div>
+    <div class="form-group">
+      <label>Ghi chú gộp</label>
+      <input type="text" id="group-merged-input" placeholder="(tùy chọn)">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="closeModal('modal-group')">Hủy</button>
+      <button class="btn btn-primary" id="btn-save-group" onclick="saveGroup()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Khách -->
+<div class="modal-overlay" id="modal-guest">
+  <div class="modal">
+    <h3 id="modal-guest-title">Thêm khách</h3>
+    <div class="form-group">
+      <label>Tên khách</label>
+      <input type="text" id="guest-name-input" placeholder="Tên khách mời">
+    </div>
+    <div class="form-group">
+      <label>Số người</label>
+      <input type="number" id="guest-count-input" value="1" min="0" max="20">
+    </div>
+    <div class="form-group">
+      <label>Buổi cỗ</label>
+      <div class="meal-checkboxes">
+        <label><input type="checkbox" id="meal-trua11" value="trua11"> Trưa 11</label>
+        <label><input type="checkbox" id="meal-chieu11" value="chieu11"> Chiều 11 (4h)</label>
+        <label><input type="checkbox" id="meal-sang12" value="sang12"> Sáng 12 (7h)</label>
+        <label><input type="checkbox" id="meal-sang12_9h" value="sang12_9h"> Sáng 12 (9h)</label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Ghi chú</label>
+      <textarea id="guest-note-input" placeholder="(tùy chọn)"></textarea>
+    </div>
+    <input type="hidden" id="guest-group-id">
+    <input type="hidden" id="guest-edit-id">
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="closeModal('modal-guest')">Hủy</button>
+      <button class="btn btn-primary" id="btn-save-guest" onclick="saveGuest()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Sync Setup -->
+<div class="modal-overlay" id="modal-sync">
+  <div class="modal">
+    <h3>Cấu hình đồng bộ Google Sheet</h3>
+    <div class="form-group">
+      <label>URL Web App (Google Apps Script)</label>
+      <input type="text" class="sync-url-input" id="sync-url-input" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <div class="sync-help">
+      Xem file <strong>huong_dan_sync.md</strong> để biết cách tạo Google Sheet + Apps Script.<br>
+      Sau khi deploy Web App, paste URL vào đây.
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="closeModal('modal-sync')">Hủy</button>
+      <button class="btn btn-outline" onclick="testSyncConnection()" id="btn-test-sync">Test kết nối</button>
+      <button class="btn btn-primary" onclick="saveSyncUrl()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Xuất CSV -->
+<div class="modal-overlay" id="modal-csv">
+  <div class="modal">
+    <h3>Xuất CSV cho Canva</h3>
+    <p style="font-size:0.85em;color:var(--text-light);margin-bottom:10px;">Chọn nhóm để xuất. Tên khách chưa có danh xưng sẽ tự thêm tiền tố phù hợp.</p>
+    <div class="form-group">
+      <label style="font-weight:600;margin-bottom:6px;display:block;">Chọn mục:</label>
+      <div id="csv-cat-list" style="max-height:300px;overflow-y:auto;"></div>
+    </div>
+    <div class="form-group" style="margin-top:10px;">
+      <label style="font-weight:600;margin-bottom:4px;display:block;">Tiền tố mặc định cho tên không có danh xưng:</label>
+      <input type="text" id="csv-default-prefix" value="Bạn" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:0.9em;">
+    </div>
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn btn-outline" onclick="closeModal('modal-csv')">Hủy</button>
+      <button class="btn btn-primary" onclick="doExportCSV()">Xuất CSV</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ===================== DATABASE =====================
+const DB_NAME = 'MoiCuoiDB_NhaGai';
+const DB_VERSION = 2;
+let db;
+
+const MEALS = [
+  { key: 'trua11', label: 'Trưa 11', short: 'T11' },
+  { key: 'chieu11', label: 'Chiều 11 (4h)', short: 'C11' },
+  { key: 'sang12', label: 'Sáng 12 (7h)', short: 'S12' },
+  { key: 'sang12_9h', label: 'Sáng 12 (9h)', short: '9h' }
+];
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('groups')) {
+        const gs = d.createObjectStore('groups', { keyPath: 'id', autoIncrement: true });
+        gs.createIndex('category', 'category', { unique: false });
+      }
+      if (!d.objectStoreNames.contains('guests')) {
+        const gts = d.createObjectStore('guests', { keyPath: 'id', autoIncrement: true });
+        gts.createIndex('groupId', 'groupId', { unique: false });
+      }
+      // Migration v2: thêm field meal (array) cho guests đã tồn tại
+      if (e.oldVersion < 2 && d.objectStoreNames.contains('guests')) {
+        const tx = e.target.transaction;
+        const store = tx.objectStore('guests');
+        store.openCursor().onsuccess = (ev) => {
+          const cursor = ev.target.result;
+          if (cursor) {
+            if (!cursor.value.meal) {
+              const updated = cursor.value;
+              updated.meal = [];
+              cursor.update(updated);
+            }
+            cursor.continue();
+          }
+        };
+      }
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function dbOp(store, mode, fn) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, mode);
+    const s = tx.objectStore(store);
+    const result = fn(s);
+    if (result && result.onsuccess !== undefined) {
+      result.onsuccess = () => resolve(result.result);
+      result.onerror = () => reject(result.error);
+    } else {
+      tx.oncomplete = () => resolve(result);
+      tx.onerror = () => reject(tx.error);
+    }
+  });
+}
+
+function getAllGroups() { return dbOp('groups', 'readonly', s => s.getAll()); }
+function getAllGuests() { return dbOp('guests', 'readonly', s => s.getAll()); }
+function addGroup(g) { return dbOp('groups', 'readwrite', s => s.add(g)); }
+function putGroup(g) { return dbOp('groups', 'readwrite', s => s.put(g)); }
+function deleteGroup(id) { return dbOp('groups', 'readwrite', s => s.delete(id)); }
+function addGuest(g) { return dbOp('guests', 'readwrite', s => s.add(g)); }
+function putGuest(g) { return dbOp('guests', 'readwrite', s => s.put(g)); }
+function deleteGuest(id) { return dbOp('guests', 'readwrite', s => s.delete(id)); }
+
+async function deleteGuestsByGroup(groupId) {
+  const guests = await getAllGuests();
+  const tx = db.transaction('guests', 'readwrite');
+  const s = tx.objectStore('guests');
+  guests.filter(g => g.groupId === groupId).forEach(g => s.delete(g.id));
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function clearAll() {
+  const tx = db.transaction(['groups', 'guests'], 'readwrite');
+  tx.objectStore('groups').clear();
+  tx.objectStore('guests').clear();
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// ===================== SEED DATA =====================
+function getSeedData() {
+  const groups = [];
+  const guests = [];
+  let gid = 0;
+
+  function g(name, category, guestList, merged) {
+    gid++;
+    groups.push({ name, category, merged: merged || '', order: gid });
+    guestList.forEach((gl, i) => {
+      guests.push({ groupId: gid, name: gl[0], count: gl[1] || 0, invited: false, meal: [], note: gl[2] || '', order: i + 1 });
+    });
+  }
+
+  const FAM = 'Bên Ngoại - Gia đình';
+  const XOM = 'Xóm - Khu phố';
+  const HOI_PHO = 'Hội phố';
+  const HOI_BAN = 'Hội - Bạn bè';
+
+  // Dữ liệu mẫu - xóa và thêm danh sách thực tế của họ nhà gái
+  g('Gia đình ông bà ngoại', FAM, [
+    ['Ông ngoại',1],['Bà ngoại',1]
+  ]);
+
+  g('Họ hàng nhà gái', FAM, [
+    ['(Chưa có dữ liệu - thêm vào đây)',1]
+  ]);
+
+  return { groups, guests };
+}
+
+// ===================== INIT & RENDER =====================
+let allGroups = [];
+let allGuests = [];
+let editingGroupId = null;
+let searchTerm = '';
+let filterStatus = 'all';
+let filterMeal = 'all';
+let openGroupIds = new Set();
+let closedCategoryNames = new Set();
+
+async function init() {
+  await openDB();
+  const groups = await getAllGroups();
+  if (groups.length === 0) {
+    await seedData();
+    showToast('Đã tải dữ liệu ban đầu!', 'success');
+  }
+  await loadAndRender();
+}
+
+async function seedData() {
+  const { groups, guests } = getSeedData();
+  for (const gr of groups) {
+    const id = await addGroup(gr);
+    const guestOfGroup = guests.filter(g => g.groupId === gr.order);
+    for (const gt of guestOfGroup) {
+      gt.groupId = id;
+      await addGuest(gt);
+    }
+  }
+}
+
+async function loadAndRender() {
+  allGroups = await getAllGroups();
+  allGuests = await getAllGuests();
+  renderTree();
+  renderStats();
+}
+
+function renderStats() {
+  const totalPeople = allGuests.reduce((s, g) => s + (g.count || 0), 0);
+  const invitedPeople = allGuests.filter(g => g.invited).reduce((s, g) => s + (g.count || 0), 0);
+  const pendingPeople = allGuests.filter(g => !g.invited).reduce((s, g) => s + (g.count || 0), 0);
+  const totalGroups = allGroups.length;
+
+  document.getElementById('stat-total-guests').textContent = totalPeople;
+  document.getElementById('stat-invited').textContent = invitedPeople;
+  document.getElementById('stat-pending').textContent = pendingPeople;
+  document.getElementById('stat-groups').textContent = totalGroups;
+
+  // Thống kê buổi cỗ theo số người
+  for (const m of MEALS) {
+    const people = allGuests.filter(g => (g.meal || []).includes(m.key)).reduce((s, g) => s + (g.count || 0), 0);
+    document.getElementById('stat-' + m.key).textContent = people;
+  }
+
+  renderCategoryStats();
+}
+
+function renderCategoryStats() {
+  const cats = {};
+  allGroups.forEach(gr => {
+    if (!cats[gr.category]) cats[gr.category] = { groups: 0, guests: 0, invited: 0, people: 0 };
+    cats[gr.category].groups++;
+    const guestsInGroup = allGuests.filter(g => g.groupId === gr.id);
+    cats[gr.category].guests += guestsInGroup.length;
+    cats[gr.category].invited += guestsInGroup.filter(g => g.invited).length;
+    cats[gr.category].people += guestsInGroup.reduce((s, g) => s + (g.count || 0), 0);
+  });
+
+  const grid = document.getElementById('cat-stat-grid');
+  grid.innerHTML = '';
+  for (const [name, data] of Object.entries(cats)) {
+    const pct = data.guests > 0 ? Math.round(data.invited / data.guests * 100) : 0;
+    grid.innerHTML += `<div class="cat-stat-item">
+      <div class="cat-name">${name}</div>
+      <div class="cat-detail">${data.groups} nhóm | ${data.guests} khách | ~${data.people} người</div>
+      <div class="cat-detail">Đã mời: ${data.invited}/${data.guests} (${pct}%)</div>
+    </div>`;
+  }
+}
+
+function renderTree() {
+  const container = document.getElementById('tree');
+  const categoryOrder = ['Bên Ngoại - Gia đình', 'Xóm - Khu phố', 'Hội phố', 'Hội - Bạn bè', 'Khác'];
+  const cats = {};
+
+  allGroups.forEach(gr => {
+    const cat = gr.category || 'Khác';
+    if (!cats[cat]) cats[cat] = [];
+    cats[cat].push(gr);
+  });
+
+  let html = '';
+  const sortedCats = Object.keys(cats).sort((a, b) => {
+    const ai = categoryOrder.indexOf(a);
+    const bi = categoryOrder.indexOf(b);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+
+  for (const cat of sortedCats) {
+    const groups = cats[cat].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const catGuests = allGuests.filter(g => groups.some(gr => gr.id === g.groupId));
+    const catInvited = catGuests.filter(g => g.invited).length;
+
+    let groupsHtml = '';
+    let hasVisibleGroup = false;
+
+    for (const gr of groups) {
+      const guestsInGroup = allGuests.filter(g => g.groupId === gr.id).sort((a, b) => (a.order || 0) - (b.order || 0));
+      let filteredGuests = guestsInGroup;
+
+      if (filterStatus === 'invited') filteredGuests = guestsInGroup.filter(g => g.invited);
+      else if (filterStatus === 'pending') filteredGuests = guestsInGroup.filter(g => !g.invited);
+
+      if (filterMeal === 'none') filteredGuests = filteredGuests.filter(g => !(g.meal || []).length);
+      else if (filterMeal !== 'all') filteredGuests = filteredGuests.filter(g => (g.meal || []).includes(filterMeal));
+
+      if (searchTerm) {
+        const lower = searchTerm.toLowerCase();
+        filteredGuests = filteredGuests.filter(g => g.name.toLowerCase().includes(lower));
+      }
+
+      const showGroup = !searchTerm && filterStatus === 'all' && filterMeal === 'all' ? true : filteredGuests.length > 0;
+      if (!showGroup) continue;
+      hasVisibleGroup = true;
+
+      const invCount = guestsInGroup.filter(g => g.invited).length;
+      const totalCount = guestsInGroup.length;
+      const peopleCount = guestsInGroup.reduce((s, g) => s + (g.count || 0), 0);
+      let mealStatsHtml = '';
+      for (const m of MEALS) {
+        const mp = guestsInGroup.filter(g => (g.meal || []).includes(m.key)).reduce((s, g) => s + (g.count || 0), 0);
+        if (mp > 0) mealStatsHtml += `<span class="meal-stat-badge ${m.key}">${m.short}: ${mp}</span>`;
+      }
+
+      let guestRows = '';
+      const displayGuests = searchTerm || filterStatus !== 'all' ? filteredGuests : guestsInGroup;
+      for (const gt of displayGuests) {
+        const nameHtml = searchTerm ? highlightText(gt.name, searchTerm) : escHtml(gt.name);
+        const guestMeal = gt.meal || [];
+        let mealHtml = '<span class="meal-tags">';
+        for (const m of MEALS) {
+          const active = guestMeal.includes(m.key) ? 'active' : '';
+          mealHtml += `<span class="meal-tag ${active}" data-meal="${m.key}" onclick="toggleMeal(${gt.id},'${m.key}',this)" title="${m.label}">${m.short}</span>`;
+        }
+        mealHtml += '</span>';
+        guestRows += `<div class="guest-row ${gt.invited ? 'invited' : ''}">
+          <input type="checkbox" class="guest-check" ${gt.invited ? 'checked' : ''} onchange="toggleInvited(${gt.id}, this.checked, this)" title="Đánh dấu đã mời">
+          <span class="guest-name">${nameHtml}</span>
+          ${mealHtml}
+          <span class="guest-count">${gt.count || '?'}</span>
+          ${gt.note ? `<span class="guest-note" title="${escHtml(gt.note)}">${escHtml(gt.note)}</span>` : ''}
+          <span class="guest-actions">
+            <button class="btn btn-outline btn-sm" onclick="openEditGuest(${gt.id})" title="Sửa">&#9998;</button>
+            <button class="btn btn-outline btn-sm" onclick="confirmDeleteGuest(${gt.id})" title="Xóa">&times;</button>
+          </span>
+        </div>`;
+      }
+
+      const isOpen = searchTerm ? true : openGroupIds.has(gr.id);
+      groupsHtml += `<div class="group-item" data-group-id="${gr.id}">
+        <div class="group-header" onclick="toggleGroup(${gr.id})">
+          <div class="left">
+            <span class="arrow ${isOpen ? 'open' : ''}" id="arrow-${gr.id}">&#9654;</span>
+            <span class="group-name">${escHtml(gr.name)}</span>
+            <span class="group-count">(${invCount}/${totalCount} mời, ~${peopleCount} người)</span>
+            ${mealStatsHtml ? `<span class="meal-stat-row">${mealStatsHtml}</span>` : ''}
+          </div>
+          <span class="actions">
+            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openEditGroup(${gr.id})" title="Sửa nhóm">&#9998;</button>
+            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); confirmDeleteGroup(${gr.id})" title="Xóa nhóm">&times;</button>
+          </span>
+        </div>
+        <div class="guest-list ${isOpen ? 'open' : ''}" id="guests-${gr.id}">
+          ${guestRows}
+          <button class="add-guest-btn" onclick="openAddGuest(${gr.id})">+ Thêm khách</button>
+        </div>
+      </div>`;
+    }
+
+    if (!hasVisibleGroup) continue;
+
+    const catHidden = closedCategoryNames.has(cat) ? 'display:none' : '';
+    html += `<div class="category-block">
+      <div class="category-header" onclick="toggleCategory(this)">
+        <h2>${cat}</h2>
+        <span class="badge">${catInvited}/${catGuests.length}</span>
+      </div>
+      <div class="category-content" style="${catHidden}">${groupsHtml}</div>
+    </div>`;
+  }
+
+  container.innerHTML = html || '<p style="text-align:center;padding:40px;color:#999;">Không tìm thấy kết quả</p>';
+}
+
+function escHtml(s) {
+  if (s === null || s === undefined || s === '') return '';
+  s = String(s);
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function highlightText(text, term) {
+  const safe = escHtml(text);
+  const safeTerm = escHtml(term);
+  const re = new RegExp('(' + safeTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+  return safe.replace(re, '<mark>$1</mark>');
+}
+
+// ===================== TREE INTERACTIONS =====================
+function toggleGroup(groupId) {
+  const el = document.getElementById('guests-' + groupId);
+  const arrow = document.getElementById('arrow-' + groupId);
+  if (el) {
+    const isOpen = el.classList.toggle('open');
+    arrow.classList.toggle('open');
+    if (isOpen) openGroupIds.add(groupId); else openGroupIds.delete(groupId);
+  }
+}
+
+function toggleCategory(headerEl) {
+  const content = headerEl.nextElementSibling;
+  const catName = headerEl.querySelector('h2').textContent;
+  const isHidden = content.style.display !== 'none';
+  content.style.display = isHidden ? 'none' : '';
+  if (isHidden) closedCategoryNames.add(catName); else closedCategoryNames.delete(catName);
+}
+
+function expandAll() {
+  document.querySelectorAll('.guest-list').forEach(el => el.classList.add('open'));
+  document.querySelectorAll('.arrow').forEach(el => el.classList.add('open'));
+  document.querySelectorAll('.category-content').forEach(el => el.style.display = '');
+  allGroups.forEach(gr => openGroupIds.add(gr.id));
+  closedCategoryNames.clear();
+}
+
+function collapseAll() {
+  document.querySelectorAll('.guest-list').forEach(el => el.classList.remove('open'));
+  document.querySelectorAll('.arrow').forEach(el => el.classList.remove('open'));
+  openGroupIds.clear();
+}
+
+function toggleCategoryStats() {
+  const sec = document.getElementById('category-stats-section');
+  sec.style.display = sec.style.display === 'none' ? '' : 'none';
+}
+
+// ===================== GUEST ACTIONS =====================
+async function toggleInvited(guestId, checked, checkboxEl) {
+  const guest = allGuests.find(g => g.id === guestId);
+  if (guest) {
+    guest.invited = checked;
+    await putGuest(guest);
+    // Cập nhật inline thay vì re-render toàn bộ
+    const row = checkboxEl.closest('.guest-row');
+    if (row) {
+      if (checked) row.classList.add('invited'); else row.classList.remove('invited');
+    }
+    // Cập nhật count trên group header
+    const groupItem = checkboxEl.closest('.group-item');
+    if (groupItem) {
+      const groupId = parseInt(groupItem.dataset.groupId);
+      const guestsInGroup = allGuests.filter(g => g.groupId === groupId);
+      const invCount = guestsInGroup.filter(g => g.invited).length;
+      const totalCount = guestsInGroup.length;
+      const peopleCount = guestsInGroup.reduce((s, g) => s + (g.count || 0), 0);
+      const countEl = groupItem.querySelector('.group-count');
+      if (countEl) countEl.textContent = `(${invCount}/${totalCount} mời, ~${peopleCount} người)`;
+    }
+    // Cập nhật badge trên category header
+    const catBlock = checkboxEl.closest('.category-block');
+    if (catBlock) {
+      const badge = catBlock.querySelector('.category-header .badge');
+      const allCheckboxes = catBlock.querySelectorAll('.guest-check');
+      const checkedCount = catBlock.querySelectorAll('.guest-check:checked').length;
+      if (badge) badge.textContent = `${checkedCount}/${allCheckboxes.length}`;
+    }
+    renderStats();
+    SyncEngine.scheduleAutoSync();
+  }
+}
+
+// ===================== MEAL TOGGLE =====================
+async function toggleMeal(guestId, mealKey, tagEl) {
+  const guest = allGuests.find(g => g.id === guestId);
+  if (!guest) return;
+  if (!guest.meal) guest.meal = [];
+  const idx = guest.meal.indexOf(mealKey);
+  if (idx >= 0) {
+    guest.meal.splice(idx, 1);
+    tagEl.classList.remove('active');
+  } else {
+    guest.meal.push(mealKey);
+    tagEl.classList.add('active');
+  }
+  await putGuest(guest);
+  renderStats();
+  SyncEngine.scheduleAutoSync();
+}
+
+// ===================== MODALS =====================
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// Group
+function populateCategorySelect(selectedValue) {
+  const sel = document.getElementById('group-category-input');
+  const cats = [...new Set(allGroups.map(g => g.category || 'Khác'))];
+  const defaults = ['Bên Ngoại - Gia đình', 'Xóm - Khu phố', 'Hội phố', 'Hội - Bạn bè', 'Khác'];
+  const all = [...new Set([...defaults, ...cats])];
+  sel.innerHTML = all.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('')
+    + '<option value="__custom__">+ Thêm danh mục mới...</option>';
+  const customInput = document.getElementById('group-category-custom');
+  if (selectedValue && all.includes(selectedValue)) {
+    sel.value = selectedValue;
+    customInput.style.display = 'none';
+  } else if (selectedValue) {
+    sel.value = '__custom__';
+    customInput.style.display = 'block';
+    customInput.value = selectedValue;
+  } else {
+    sel.value = all[0];
+    customInput.style.display = 'none';
+  }
+}
+
+function getSelectedCategory() {
+  const sel = document.getElementById('group-category-input');
+  if (sel.value === '__custom__') {
+    return document.getElementById('group-category-custom').value.trim();
+  }
+  return sel.value;
+}
+
+function openAddGroup() {
+  editingGroupId = null;
+  document.getElementById('modal-group-title').textContent = 'Thêm nhóm';
+  document.getElementById('group-name-input').value = '';
+  populateCategorySelect('Bên Ngoại - Gia đình');
+  document.getElementById('group-merged-input').value = '';
+  openModal('modal-group');
+  document.getElementById('group-name-input').focus();
+}
+
+function openEditGroup(id) {
+  const gr = allGroups.find(g => g.id === id);
+  if (!gr) return;
+  editingGroupId = id;
+  document.getElementById('modal-group-title').textContent = 'Sửa nhóm';
+  document.getElementById('group-name-input').value = gr.name;
+  populateCategorySelect(gr.category);
+  document.getElementById('group-merged-input').value = gr.merged || '';
+  openModal('modal-group');
+  document.getElementById('group-name-input').focus();
+}
+
+async function saveGroup() {
+  const name = document.getElementById('group-name-input').value.trim();
+  const category = getSelectedCategory();
+  if (!category) { showToast('Vui lòng chọn hoặc nhập danh mục', 'error'); return; }
+  const merged = document.getElementById('group-merged-input').value.trim();
+  if (!name) { showToast('Vui lòng nhập tên nhóm', 'error'); return; }
+
+  if (editingGroupId) {
+    const gr = allGroups.find(g => g.id === editingGroupId);
+    gr.name = name;
+    gr.category = category;
+    gr.merged = merged;
+    await putGroup(gr);
+    showToast('Đã cập nhật nhóm', 'success');
+  } else {
+    const maxOrder = allGroups.reduce((m, g) => Math.max(m, g.order || 0), 0);
+    await addGroup({ name, category, merged, order: maxOrder + 1 });
+    showToast('Đã thêm nhóm mới', 'success');
+  }
+  closeModal('modal-group');
+  await loadAndRender();
+  SyncEngine.scheduleAutoSync();
+}
+
+async function confirmDeleteGroup(id) {
+  const gr = allGroups.find(g => g.id === id);
+  if (!gr) { console.warn('confirmDeleteGroup: không tìm thấy group id=', id, 'allGroups ids=', allGroups.map(g=>g.id)); showToast('Lỗi: không tìm thấy nhóm, thử reload trang', 'error'); return; }
+  const count = allGuests.filter(g => g.groupId === id).length;
+  if (!confirm(`Xóa nhóm "${gr.name}" và ${count} khách trong nhóm?`)) return;
+  await deleteGuestsByGroup(id);
+  await deleteGroup(id);
+  showToast('Đã xóa nhóm', 'success');
+  await loadAndRender();
+  SyncEngine.scheduleAutoSync();
+}
+
+// Guest
+function openAddGuest(groupId) {
+  document.getElementById('modal-guest-title').textContent = 'Thêm khách';
+  document.getElementById('guest-name-input').value = '';
+  document.getElementById('guest-count-input').value = '1';
+  document.getElementById('guest-note-input').value = '';
+  document.getElementById('guest-group-id').value = groupId;
+  document.getElementById('guest-edit-id').value = '';
+  MEALS.forEach(m => document.getElementById('meal-' + m.key).checked = false);
+  openModal('modal-guest');
+  document.getElementById('guest-name-input').focus();
+}
+
+function openEditGuest(id) {
+  const gt = allGuests.find(g => g.id === id);
+  if (!gt) return;
+  document.getElementById('modal-guest-title').textContent = 'Sửa khách';
+  document.getElementById('guest-name-input').value = gt.name;
+  document.getElementById('guest-count-input').value = gt.count || 0;
+  document.getElementById('guest-note-input').value = gt.note || '';
+  document.getElementById('guest-group-id').value = gt.groupId;
+  document.getElementById('guest-edit-id').value = id;
+  const guestMeal = gt.meal || [];
+  MEALS.forEach(m => document.getElementById('meal-' + m.key).checked = guestMeal.includes(m.key));
+  openModal('modal-guest');
+  document.getElementById('guest-name-input').focus();
+}
+
+async function saveGuest() {
+  const name = document.getElementById('guest-name-input').value.trim();
+  const count = parseInt(document.getElementById('guest-count-input').value) || 0;
+  const note = document.getElementById('guest-note-input').value.trim();
+  const groupId = parseInt(document.getElementById('guest-group-id').value);
+  const editId = document.getElementById('guest-edit-id').value;
+  const meal = MEALS.map(m => m.key).filter(k => document.getElementById('meal-' + k).checked);
+
+  if (!name) { showToast('Vui lòng nhập tên khách', 'error'); return; }
+
+  if (editId) {
+    const gt = allGuests.find(g => g.id === parseInt(editId));
+    gt.name = name;
+    gt.count = count;
+    gt.note = note;
+    gt.meal = meal;
+    await putGuest(gt);
+    showToast('Đã cập nhật khách', 'success');
+  } else {
+    const guestsInGroup = allGuests.filter(g => g.groupId === groupId);
+    const maxOrder = guestsInGroup.reduce((m, g) => Math.max(m, g.order || 0), 0);
+    await addGuest({ groupId, name, count, invited: false, meal, note, order: maxOrder + 1 });
+    showToast('Đã thêm khách mới', 'success');
+  }
+  closeModal('modal-guest');
+  await loadAndRender();
+  SyncEngine.scheduleAutoSync();
+}
+
+async function confirmDeleteGuest(id) {
+  const gt = allGuests.find(g => g.id === id);
+  if (!gt) { console.warn('confirmDeleteGuest: không tìm thấy guest id=', id, 'allGuests ids=', allGuests.map(g=>g.id)); showToast('Lỗi: không tìm thấy khách, thử reload trang', 'error'); return; }
+  if (!confirm(`Xóa khách "${gt.name}"?`)) return;
+  await deleteGuest(id);
+  showToast('Đã xóa khách', 'success');
+  await loadAndRender();
+  SyncEngine.scheduleAutoSync();
+}
+
+// ===================== SEARCH & FILTER =====================
+document.getElementById('search-input').addEventListener('input', function() {
+  searchTerm = this.value.trim();
+  renderTree();
+});
+
+document.getElementById('filter-status').addEventListener('change', function() {
+  filterStatus = this.value;
+  renderTree();
+});
+
+document.getElementById('filter-meal').addEventListener('change', function() {
+  filterMeal = this.value;
+  renderTree();
+});
+
+// ===================== EXPORT / IMPORT =====================
+async function exportData() {
+  const data = { groups: allGroups, guests: allGuests, exportDate: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `moi_cuoi_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Đã xuất dữ liệu!', 'success');
+}
+
+// ===================== EXPORT CSV (Canva) =====================
+const KNOWN_PREFIXES = ['anh', 'chị', 'em', 'a', 'cô', 'chú', 'bác', 'dì', 'cậu', 'mợ', 'ông', 'bà', 'cụ', 'bạn', 'thầy', 'cô'];
+
+function hasPrefix(name) {
+  const lower = name.trim().toLowerCase();
+  for (const p of KNOWN_PREFIXES) {
+    if (lower.startsWith(p + ' ')) return true;
+  }
+  return false;
+}
+
+function openExportCSV() {
+  const cats = {};
+  allGroups.forEach(gr => {
+    const cat = gr.category || 'Khác';
+    if (!cats[cat]) cats[cat] = [];
+    cats[cat].push(gr);
+  });
+
+  let html = '';
+  for (const cat of Object.keys(cats)) {
+    const groups = cats[cat].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const catGuestCount = allGuests.filter(g => groups.some(gr => gr.id === g.groupId)).length;
+    html += `<div style="margin-bottom:8px;">
+      <label style="font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" class="csv-cat-check" data-cat="${escHtml(cat)}" checked onchange="toggleCSVCatGroups(this)">
+        ${escHtml(cat)} (${catGuestCount})
+      </label>
+      <div style="padding-left:20px;">`;
+    for (const gr of groups) {
+      const gc = allGuests.filter(g => g.groupId === gr.id).length;
+      html += `<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.85em;padding:2px 0;">
+        <input type="checkbox" class="csv-group-check" data-group-id="${gr.id}" data-cat="${escHtml(cat)}" checked>
+        ${escHtml(gr.name)} (${gc})
+      </label>`;
+    }
+    html += `</div></div>`;
+  }
+
+  document.getElementById('csv-cat-list').innerHTML = html;
+  document.getElementById('modal-csv').classList.add('active');
+}
+
+function toggleCSVCatGroups(el) {
+  const cat = el.dataset.cat;
+  const checked = el.checked;
+  document.querySelectorAll(`.csv-group-check[data-cat="${cat}"]`).forEach(cb => cb.checked = checked);
+}
+
+function doExportCSV() {
+  const selectedGroupIds = new Set();
+  document.querySelectorAll('.csv-group-check:checked').forEach(cb => {
+    selectedGroupIds.add(Number(cb.dataset.groupId));
+  });
+
+  if (selectedGroupIds.size === 0) {
+    showToast('Chưa chọn nhóm nào!', 'error');
+    return;
+  }
+
+  const defaultPrefix = document.getElementById('csv-default-prefix').value.trim() || 'Bạn';
+  const guests = allGuests
+    .filter(g => selectedGroupIds.has(g.groupId))
+    .sort((a, b) => {
+      const ga = allGroups.find(gr => gr.id === a.groupId);
+      const gb = allGroups.find(gr => gr.id === b.groupId);
+      const catA = ga ? ga.category || '' : '';
+      const catB = gb ? gb.category || '' : '';
+      if (catA !== catB) return catA.localeCompare(catB);
+      const oA = ga ? ga.order || 0 : 0;
+      const oB = gb ? gb.order || 0 : 0;
+      if (oA !== oB) return oA - oB;
+      return (a.order || 0) - (b.order || 0);
+    });
+
+  let csv = 'name\n';
+  for (const g of guests) {
+    let name = g.name.trim();
+    if (!hasPrefix(name)) {
+      name = defaultPrefix + ' ' + name;
+    }
+    csv += name.replace(/"/g, '""') + '\n';
+  }
+
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `canva_guests_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  closeModal('modal-csv');
+  showToast(`Đã xuất CSV ${guests.length} khách!`, 'success');
+}
+
+async function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!confirm('Nhập dữ liệu sẽ THÊM vào dữ liệu hiện tại. Tiếp tục?')) {
+    event.target.value = '';
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data.groups || !data.guests) throw new Error('Dữ liệu không hợp lệ');
+
+    const maxOrder = allGroups.reduce((m, g) => Math.max(m, g.order || 0), 0);
+    let orderOffset = maxOrder;
+    let merged = 0, skipped = 0;
+    for (const gr of data.groups) {
+      const oldId = gr.id;
+      delete gr.id;
+      // Tìm nhóm trùng tên đã có
+      const existing = allGroups.find(eg => eg.name.trim().toLowerCase() === gr.name.trim().toLowerCase());
+      if (existing) {
+        // Gộp khách vào nhóm đã có, bỏ qua trùng tên
+        const existingGuests = allGuests.filter(g => g.groupId === existing.id);
+        const existingNames = existingGuests.map(g => g.name.trim().toLowerCase());
+        const maxGuestOrder = existingGuests.reduce((m, g) => Math.max(m, g.order || 0), 0);
+        let guestOrder = maxGuestOrder;
+        data.guests.filter(g => g.groupId === oldId).forEach(g => {
+          if (existingNames.includes(g.name.trim().toLowerCase())) {
+            g._skip = true; skipped++;
+          } else {
+            guestOrder++; g.groupId = existing.id; g.order = guestOrder;
+          }
+        });
+        merged++;
+      } else {
+        orderOffset++;
+        gr.order = orderOffset;
+        const newId = await addGroup(gr);
+        data.guests.filter(g => g.groupId === oldId).forEach(g => g.groupId = newId);
+      }
+    }
+    for (const gt of data.guests) {
+      if (gt._skip) continue;
+      delete gt.id;
+      await addGuest(gt);
+    }
+    if (skipped > 0) showToast(`Bỏ qua ${skipped} khách trùng tên`, '');
+    showToast('Đã nhập thêm dữ liệu thành công!', 'success');
+    await loadAndRender();
+    SyncEngine.scheduleAutoSync();
+  } catch (e) {
+    showToast('Lỗi: ' + e.message, 'error');
+  }
+  event.target.value = '';
+}
+
+async function resetData() {
+  if (!confirm('Reset về dữ liệu gốc? Mọi thay đổi sẽ bị mất!')) return;
+  await clearAll();
+  await seedData();
+  showToast('Đã reset về dữ liệu gốc!', 'success');
+  await loadAndRender();
+}
+
+// ===================== TOAST =====================
+function showToast(msg, type) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + (type || '');
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => { toast.remove(); }, 3000);
+}
+
+// ===================== KEYBOARD =====================
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+  }
+});
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.remove('active');
+  });
+});
+
+// ===================== SYNC =====================
+const DEFAULT_SYNC_URL = '';
+let SYNC_URL = localStorage.getItem('syncUrl_nha_gai') || DEFAULT_SYNC_URL;
+const PUSH_PASSWORD = '1234567890';
+
+function updateSyncStatus(text, type) {
+  const el = document.getElementById('sync-status');
+  el.textContent = text;
+  el.className = 'sync-status ' + (type || '');
+}
+
+function setSyncButtonsLoading(loading) {
+  const btnPush = document.getElementById('btn-push');
+  const btnPull = document.getElementById('btn-pull');
+  if (loading) {
+    btnPush.disabled = true;
+    btnPull.disabled = true;
+    btnPush.innerHTML = '<span class="sync-spinner"></span>';
+    btnPull.innerHTML = '<span class="sync-spinner"></span>';
+  } else {
+    btnPush.disabled = false;
+    btnPull.disabled = false;
+    btnPush.innerHTML = '&#8679; Đẩy lên';
+    btnPull.innerHTML = '&#8681; Kéo về';
+  }
+}
+
+function initSyncBar() {
+  if (!SYNC_URL) {
+    updateSyncStatus('Chưa cấu hình sync', '');
+  } else {
+    const lastSync = localStorage.getItem('lastSyncTime_nha_gai');
+    if (lastSync) {
+      updateSyncStatus('Sync lần cuối: ' + new Date(lastSync).toLocaleString('vi-VN'), 'success');
+    } else {
+      updateSyncStatus('Đã cấu hình - chưa sync', '');
+    }
+  }
+}
+
+// Convert IndexedDB data → Sheet format (meal array → 3 boolean columns)
+function guestsToSheetFormat(guests) {
+  return guests.map(g => ({
+    id: g.id,
+    groupId: g.groupId,
+    name: g.name,
+    count: g.count || 0,
+    invited: !!g.invited,
+    trua11: (g.meal || []).includes('trua11'),
+    chieu11: (g.meal || []).includes('chieu11'),
+    sang12: (g.meal || []).includes('sang12'),
+    sang12_9h: (g.meal || []).includes('sang12_9h'),
+    note: g.note || '',
+    order: g.order || 0
+  }));
+}
+
+// Convert Sheet format → IndexedDB data (3 boolean columns → meal array)
+function guestsFromSheetFormat(sheetGuests) {
+  return sheetGuests.map(g => {
+    const meal = [];
+    if (g.trua11 === true || g.trua11 === 'TRUE') meal.push('trua11');
+    if (g.chieu11 === true || g.chieu11 === 'TRUE') meal.push('chieu11');
+    if (g.sang12 === true || g.sang12 === 'TRUE') meal.push('sang12');
+    if (g.sang12_9h === true || g.sang12_9h === 'TRUE') meal.push('sang12_9h');
+    return {
+      id: g.id,
+      groupId: g.groupId,
+      name: String(g.name || ''),
+      count: parseInt(g.count) || 0,
+      invited: g.invited === true || g.invited === 'TRUE',
+      meal,
+      note: String(g.note || ''),
+      order: parseInt(g.order) || 0
+    };
+  });
+}
+
+async function syncToCloud() {
+  if (!SYNC_URL) {
+    showToast('Chưa cấu hình URL sync. Bấm ⚙ Sync để cấu hình.', 'error');
+    return;
+  }
+  const pw = prompt('Nhập mật khẩu để đẩy dữ liệu lên Cloud:');
+  if (pw === null) return;
+  if (pw !== PUSH_PASSWORD) {
+    showToast('Sai mật khẩu!', 'error');
+    return;
+  }
+  setSyncButtonsLoading(true);
+  updateSyncStatus('Đang đẩy dữ liệu lên...', 'syncing');
+  try {
+    const groups = await getAllGroups();
+    const guests = await getAllGuests();
+    const sheetGuests = guestsToSheetFormat(guests);
+    const response = await fetch(SYNC_URL + '?action=push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ groups, guests: sheetGuests, clientId: CLIENT_ID })
+    });
+    const result = await response.json();
+    if (result.status === 'ok') {
+      if (result.version) SyncEngine.localVersion = result.version;
+      const now = new Date().toISOString();
+      localStorage.setItem('lastSyncTime_nha_gai', now);
+      SyncEngine.lastSyncTime = Date.now();
+      SyncEngine.setDot('green');
+      updateSyncStatus('Đã đẩy lên lúc ' + new Date(now).toLocaleString('vi-VN'), 'success');
+      showToast('Đẩy dữ liệu lên Cloud thành công!', 'success');
+    } else {
+      throw new Error(result.message || 'Lỗi không xác định');
+    }
+  } catch (e) {
+    updateSyncStatus('Lỗi đẩy lên: ' + e.message, 'error');
+    showToast('Lỗi đẩy lên Cloud: ' + e.message, 'error');
+  }
+  setSyncButtonsLoading(false);
+}
+
+async function syncFromCloud() {
+  if (!SYNC_URL) {
+    showToast('Chưa cấu hình URL sync. Bấm ⚙ Sync để cấu hình.', 'error');
+    return;
+  }
+  if (!confirm('Kéo dữ liệu từ Cloud sẽ thay thế toàn bộ dữ liệu hiện tại. Tiếp tục?')) return;
+  setSyncButtonsLoading(true);
+  updateSyncStatus('Đang kéo dữ liệu về...', 'syncing');
+  try {
+    const response = await fetch(SYNC_URL + '?action=read');
+    const result = await response.json();
+    if (result.status === 'ok') {
+      const cloudGroups = result.groups || [];
+      const cloudGuests = guestsFromSheetFormat(result.guests || []);
+      await clearAll();
+      // Import groups, map old IDs to new IDs
+      const idMap = {};
+      for (const gr of cloudGroups) {
+        const oldId = gr.id;
+        delete gr.id;
+        gr.name = String(gr.name || '');
+        gr.category = String(gr.category || '');
+        gr.merged = String(gr.merged || '');
+        gr.order = parseInt(gr.order) || 0;
+        const newId = await addGroup(gr);
+        idMap[oldId] = newId;
+      }
+      // Import guests with mapped groupIds
+      for (const gt of cloudGuests) {
+        delete gt.id;
+        gt.groupId = idMap[gt.groupId] || gt.groupId;
+        await addGuest(gt);
+      }
+      if (result.version) SyncEngine.localVersion = result.version;
+      const now = new Date().toISOString();
+      localStorage.setItem('lastSyncTime_nha_gai', now);
+      SyncEngine.lastSyncTime = Date.now();
+      SyncEngine.setDot('green');
+      updateSyncStatus('Đã kéo về lúc ' + new Date(now).toLocaleString('vi-VN'), 'success');
+      showToast('Kéo dữ liệu từ Cloud thành công!', 'success');
+      await loadAndRender();
+    } else {
+      throw new Error(result.message || 'Lỗi không xác định');
+    }
+  } catch (e) {
+    updateSyncStatus('Lỗi kéo về: ' + e.message, 'error');
+    showToast('Lỗi kéo từ Cloud: ' + e.message, 'error');
+  }
+  setSyncButtonsLoading(false);
+}
+
+function openSyncSetup() {
+  document.getElementById('sync-url-input').value = SYNC_URL;
+  openModal('modal-sync');
+}
+
+function saveSyncUrl() {
+  const url = document.getElementById('sync-url-input').value.trim();
+  SYNC_URL = url;
+  localStorage.setItem('syncUrl_nha_gai', url);
+  closeModal('modal-sync');
+  initSyncBar();
+  if (url) {
+    showToast('Đã lưu URL sync!', 'success');
+  } else {
+    showToast('Đã xóa URL sync', '');
+  }
+}
+
+async function testSyncConnection() {
+  const url = document.getElementById('sync-url-input').value.trim();
+  if (!url) { showToast('Vui lòng nhập URL trước', 'error'); return; }
+  const btn = document.getElementById('btn-test-sync');
+  btn.disabled = true;
+  btn.textContent = 'Đang test...';
+  try {
+    const response = await fetch(url + '?action=read');
+    const result = await response.json();
+    if (result.status === 'ok') {
+      const gCount = (result.groups || []).length;
+      const gtCount = (result.guests || []).length;
+      showToast(`Kết nối OK! Sheet có ${gCount} nhóm, ${gtCount} khách.`, 'success');
+    } else {
+      showToast('Kết nối thất bại: ' + (result.message || 'Lỗi'), 'error');
+    }
+  } catch (e) {
+    showToast('Không kết nối được: ' + e.message, 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Test kết nối';
+}
+
+// ===================== SYNC ENGINE (Realtime) =====================
+const CLIENT_ID = (function() {
+  let id = localStorage.getItem('syncClientId_nha_gai');
+  if (!id) { id = 'c_' + Math.random().toString(36).slice(2, 10) + '_' + Date.now(); localStorage.setItem('syncClientId_nha_gai', id); }
+  return id;
+})();
+
+const SyncEngine = {
+  localVersion: 0,
+  pollTimer: null,
+  pushTimer: null,
+  agoTimer: null,
+  lastSyncTime: null,
+  pollInterval: 5000,
+  idleTimeout: 120000,   // 2 phút không thay đổi → giãn poll
+  idlePollInterval: 15000,
+  lastActivity: Date.now(),
+  pushing: false,
+  polling: false,
+  dirty: false,
+
+  start() {
+    if (!SYNC_URL) return;
+    this.poll();
+    this.pollTimer = setInterval(() => this.poll(), this.pollInterval);
+    this.agoTimer = setInterval(() => this.updateAgo(), 5000);
+    // Visibility API
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        this.stop();
+      } else {
+        this.poll();
+        this.pollTimer = setInterval(() => this.poll(), this.pollInterval);
+      }
+    });
+  },
+
+  stop() {
+    if (this.pollTimer) { clearInterval(this.pollTimer); this.pollTimer = null; }
+  },
+
+  scheduleAutoSync() {
+    if (!SYNC_URL) return;
+    this.lastActivity = Date.now();
+    this.dirty = true;
+    // Adaptive: quay lại poll nhanh khi có activity
+    if (this.pollInterval !== 5000) {
+      this.pollInterval = 5000;
+      if (this.pollTimer) { clearInterval(this.pollTimer); this.pollTimer = setInterval(() => this.poll(), this.pollInterval); }
+    }
+    if (this.pushTimer) clearTimeout(this.pushTimer);
+    this.pushTimer = setTimeout(() => this.push(), 1000);
+  },
+
+  async push() {
+    if (!SYNC_URL || this.pushing || !db) return;
+    this.pushing = true;
+    this.pushTimer = null;
+    this.dirty = false;
+    this.setDot('orange');
+    try {
+      const groups = await getAllGroups();
+      const guests = await getAllGuests();
+      const sheetGuests = guestsToSheetFormat(guests);
+      const response = await fetch(SYNC_URL + '?action=push', {
+        method: 'POST',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ groups, guests: sheetGuests, clientId: CLIENT_ID })
+      });
+      const result = await response.json();
+      if (result.status === 'ok' && result.version) {
+        this.localVersion = result.version;
+        this.lastSyncTime = Date.now();
+        this.setDot('green');
+        this.updateAgo();
+        localStorage.setItem('lastSyncTime_nha_gai', new Date().toISOString());
+      } else {
+        console.warn('Auto-push response:', result);
+        this.setDot('red');
+      }
+    } catch (e) {
+      this.setDot('red');
+      console.warn('Auto-push error:', e.message);
+    }
+    this.pushing = false;
+    // Nếu có thay đổi mới trong lúc push → push lại
+    if (this.dirty) {
+      this.pushTimer = setTimeout(() => this.push(), 500);
+    }
+  },
+
+  async poll() {
+    if (!SYNC_URL || this.polling || this.pushing || this.pushTimer || !db) return;
+    // Adaptive polling: giãn nếu idle
+    if (Date.now() - this.lastActivity > this.idleTimeout && this.pollInterval !== this.idlePollInterval) {
+      this.pollInterval = this.idlePollInterval;
+      if (this.pollTimer) { clearInterval(this.pollTimer); this.pollTimer = setInterval(() => this.poll(), this.pollInterval); }
+    }
+    this.polling = true;
+    try {
+      const response = await fetch(SYNC_URL + '?action=checkAndPull&version=' + this.localVersion, { redirect: 'follow' });
+      const result = await response.json();
+      if (result.status === 'ok') {
+        if (result.changed && result.version !== this.localVersion) {
+          const isFromOther = result.lastUpdatedBy !== CLIENT_ID;
+          this.localVersion = result.version;
+          if (isFromOther) {
+            await this.applyRemoteData(result.groups, result.guests);
+            showToast('Đã nhận thay đổi từ thiết bị khác', 'info');
+          }
+          this.lastSyncTime = Date.now();
+          this.setDot('green');
+          this.updateAgo();
+        } else {
+          this.setDot('green');
+          if (!this.lastSyncTime) { this.lastSyncTime = Date.now(); this.updateAgo(); }
+        }
+      }
+    } catch (e) {
+      this.setDot('red');
+      console.warn('Poll error:', e.message);
+    }
+    this.polling = false;
+  },
+
+  async applyRemoteData(cloudGroups, cloudGuestsRaw) {
+    const cloudGuests = guestsFromSheetFormat(cloudGuestsRaw || []);
+    // Lưu tên các group đang mở để khôi phục sau import
+    const openGroupNames = new Set();
+    for (const id of openGroupIds) {
+      const gr = allGroups.find(g => g.id === id);
+      if (gr) openGroupNames.add(gr.name);
+    }
+    const savedClosedCats = new Set(closedCategoryNames);
+    await clearAll();
+    const idMap = {};
+    for (const gr of cloudGroups) {
+      const oldId = gr.id;
+      delete gr.id;
+      gr.name = String(gr.name || '');
+      gr.category = String(gr.category || '');
+      gr.merged = String(gr.merged || '');
+      gr.order = parseInt(gr.order) || 0;
+      const newId = await addGroup(gr);
+      idMap[oldId] = newId;
+    }
+    for (const gt of cloudGuests) {
+      delete gt.id;
+      gt.groupId = idMap[gt.groupId] || gt.groupId;
+      await addGuest(gt);
+    }
+    // Khôi phục trạng thái mở/đóng
+    await loadAndRender();
+    openGroupIds.clear();
+    for (const gr of allGroups) {
+      if (openGroupNames.has(gr.name)) openGroupIds.add(gr.id);
+    }
+    closedCategoryNames = savedClosedCats;
+    renderTree();
+  },
+
+  setDot(color) {
+    const dot = document.getElementById('sync-dot');
+    if (dot) { dot.className = 'sync-dot ' + color; }
+  },
+
+  updateAgo() {
+    const el = document.getElementById('sync-ago');
+    if (!el || !this.lastSyncTime) { if (el) el.textContent = ''; return; }
+    const sec = Math.round((Date.now() - this.lastSyncTime) / 1000);
+    if (sec < 5) el.textContent = 'Vừa đồng bộ';
+    else if (sec < 60) el.textContent = `${sec}s trước`;
+    else el.textContent = `${Math.floor(sec / 60)}m trước`;
+  }
+};
+
+// ===================== START =====================
+init().then(() => {
+  initSyncBar();
+  SyncEngine.start();
+});
+</script>
+</body>
+</html>
