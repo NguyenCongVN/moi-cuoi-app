@@ -1531,7 +1531,7 @@ function initSyncBar() {
   }
 }
 
-// Convert IndexedDB data → Sheet format (meal array → 3 boolean columns)
+// Convert IndexedDB data → Sheet format (meal array → boolean columns)
 function guestsToSheetFormat(guests) {
   return guests.map(g => ({
     id: g.id,
@@ -1543,12 +1543,13 @@ function guestsToSheetFormat(guests) {
     chieu11: (g.meal || []).includes('chieu11'),
     sang12: (g.meal || []).includes('sang12'),
     sang12_9h: (g.meal || []).includes('sang12_9h'),
+    noMeal: !!g.noMeal,
     note: g.note || '',
     order: g.order || 0
   }));
 }
 
-// Convert Sheet format → IndexedDB data (3 boolean columns → meal array)
+// Convert Sheet format → IndexedDB data (boolean columns → meal array)
 function guestsFromSheetFormat(sheetGuests) {
   return sheetGuests.map(g => {
     const meal = [];
@@ -1563,6 +1564,7 @@ function guestsFromSheetFormat(sheetGuests) {
       count: parseInt(g.count) || 0,
       invited: g.invited === true || g.invited === 'TRUE',
       meal,
+      noMeal: g.noMeal === true || g.noMeal === 'TRUE',
       note: String(g.note || ''),
       order: parseInt(g.order) || 0
     };
