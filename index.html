@@ -235,6 +235,7 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
     <option value="all">Tất cả</option>
     <option value="invited">Đã mời</option>
     <option value="pending">Chưa mời</option>
+    <option value="invited_no_meal">Đã mời, chưa chốt cỗ</option>
   </select>
   <select id="filter-meal">
     <option value="all">Mọi buổi</option>
@@ -855,6 +856,7 @@ function renderTree() {
 
       if (filterStatus === 'invited') filteredGuests = guestsInGroup.filter(g => g.invited);
       else if (filterStatus === 'pending') filteredGuests = guestsInGroup.filter(g => !g.invited);
+      else if (filterStatus === 'invited_no_meal') filteredGuests = guestsInGroup.filter(g => g.invited && !(g.meal || []).length);
 
       if (filterMeal === 'none') filteredGuests = filteredGuests.filter(g => !(g.meal || []).length);
       else if (filterMeal !== 'all') filteredGuests = filteredGuests.filter(g => (g.meal || []).includes(filterMeal));
