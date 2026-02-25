@@ -867,7 +867,7 @@ function renderTree() {
 
       if (filterStatus === 'invited') filteredGuests = guestsInGroup.filter(g => g.invited);
       else if (filterStatus === 'pending') filteredGuests = guestsInGroup.filter(g => !g.invited);
-      else if (filterStatus === 'invited_no_meal') filteredGuests = guestsInGroup.filter(g => g.invited && !(g.meal || []).length);
+      else if (filterStatus === 'invited_no_meal') filteredGuests = guestsInGroup.filter(g => g.invited && !(g.meal || []).length && !g.noMeal);
 
       if (filterMeal === 'none') filteredGuests = filteredGuests.filter(g => !(g.meal || []).length && !g.noMeal);
       else if (filterMeal === 'no_meal') filteredGuests = filteredGuests.filter(g => g.noMeal);
