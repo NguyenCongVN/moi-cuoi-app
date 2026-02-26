@@ -151,6 +151,8 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
 .bus-tag[data-bus="xe30_don_dau"].active { background: #e53935; }
 .bus-tag[data-bus="xe45_hn_ve"].active   { background: #3949ab; }
 .bus-tag[data-bus="xe45_len_hn"].active  { background: #8e24aa; }
+.bus-tag[data-bus="xe_ve_t6"].active     { background: #f57f17; }
+.bus-tag[data-bus="xe_di_t6"].active     { background: #2e7d32; }
 .bus-tag:hover { opacity: 0.8; }
 .meal-checkboxes { display: flex; gap: 10px; flex-wrap: wrap; }
 .meal-checkboxes label { display: flex; align-items: center; gap: 4px; font-size: 0.9em; cursor: pointer; }
@@ -169,6 +171,8 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
 .meal-stat-badge.xe30_don_dau { background: #e53935; }
 .meal-stat-badge.xe45_hn_ve   { background: #3949ab; }
 .meal-stat-badge.xe45_len_hn  { background: #8e24aa; }
+.meal-stat-badge.xe_ve_t6     { background: #f57f17; }
+.meal-stat-badge.xe_di_t6     { background: #2e7d32; }
 
 /* Hidden file input */
 .hidden { display: none; }
@@ -270,6 +274,14 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
   <div class="stat-card" style="border-left: 3px solid #8e24aa;">
     <div class="num" id="stat-xe45_len_hn" style="color:#8e24aa;">0</div>
     <div class="label">Xe 45 - lên HN</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #f57f17;">
+    <div class="num" id="stat-xe_ve_t6" style="color:#f57f17;">0</div>
+    <div class="label">Về chiều thứ 6</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #2e7d32;">
+    <div class="num" id="stat-xe_di_t6" style="color:#2e7d32;">0</div>
+    <div class="label">Đi chiều thứ 6</div>
   </div>
 </div>
 
@@ -454,9 +466,11 @@ const MEALS = [
 const BUSES = [
   { key: 'xe30_hn_ve',   label: 'Xe 30 chỗ HN về',      short: '30↓HN' },
   { key: 'xe30_len_hn',  label: 'Xe 30 chỗ lên HN',     short: '30↑HN' },
-  { key: 'xe30_don_dau', label: 'Xe 30 chỗ đón dâu',    short: '30♥'   },
-  { key: 'xe45_hn_ve',   label: 'Xe 45 chỗ HN về',      short: '45↓HN' },
-  { key: 'xe45_len_hn',  label: 'Xe 45 chỗ lên HN',     short: '45↑HN' }
+  { key: 'xe30_don_dau', label: 'Xe 30 chỗ đón dâu',       short: '30♥'   },
+  { key: 'xe45_hn_ve',   label: 'Xe 45 chỗ HN về',         short: '45↓HN' },
+  { key: 'xe45_len_hn',  label: 'Xe 45 chỗ lên HN',        short: '45↑HN' },
+  { key: 'xe_ve_t6',     label: 'Về chiều thứ 6',           short: 'VềT6'  },
+  { key: 'xe_di_t6',     label: 'Đi chiều thứ 6',           short: 'ĐiT6'  }
 ];
 
 function openDB() {
@@ -1689,6 +1703,8 @@ function guestsToSheetFormat(guests) {
     xe30_don_dau: !!g.xe30_don_dau,
     xe45_hn_ve:   !!g.xe45_hn_ve,
     xe45_len_hn:  !!g.xe45_len_hn,
+    xe_ve_t6:     !!g.xe_ve_t6,
+    xe_di_t6:     !!g.xe_di_t6,
     note: g.note || '',
     order: g.order || 0
   }));
@@ -1716,6 +1732,8 @@ function guestsFromSheetFormat(sheetGuests) {
       xe30_don_dau: bool(g.xe30_don_dau),
       xe45_hn_ve:   bool(g.xe45_hn_ve),
       xe45_len_hn:  bool(g.xe45_len_hn),
+      xe_ve_t6:     bool(g.xe_ve_t6),
+      xe_di_t6:     bool(g.xe_di_t6),
       note: String(g.note || ''),
       order: parseInt(g.order) || 0
     };
