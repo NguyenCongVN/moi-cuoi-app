@@ -1040,7 +1040,7 @@ function renderTree() {
       }
 
       let guestRows = '';
-      const displayGuests = searchTerm || filterStatus !== 'all' ? filteredGuests : guestsInGroup;
+      const displayGuests = searchTerm || filterStatus !== 'all' || filterMeal !== 'all' ? filteredGuests : guestsInGroup;
       for (const gt of displayGuests) {
         const nameHtml = searchTerm ? highlightText(gt.name, searchTerm) : escHtml(gt.name);
         const guestMeal = gt.meal || [];
