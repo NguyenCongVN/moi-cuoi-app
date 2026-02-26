@@ -106,6 +106,12 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
 .modal textarea { resize: vertical; min-height: 60px; }
 .modal .btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 15px; }
 
+/* Startup loading overlay */
+.startup-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; justify-content: center; align-items: center; flex-direction: column; gap: 16px; }
+.startup-overlay.active { display: flex; }
+.startup-overlay .spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+.startup-overlay .msg { color: #fff; font-size: 1em; font-weight: 500; }
+
 /* Toast */
 .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
 .toast { background: #333; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 0.85em; animation: slideIn 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
@@ -385,6 +391,12 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
       <button class="btn btn-outline" onclick="closeModal('modal-unconfirmed')">Đóng</button>
     </div>
   </div>
+</div>
+
+<!-- Startup Loading Overlay -->
+<div class="startup-overlay" id="startup-overlay">
+  <div class="spinner"></div>
+  <div class="msg">Đang tải dữ liệu mới nhất...</div>
 </div>
 
 <!-- Toast Container -->
@@ -769,6 +781,7 @@ async function init() {
 
 async function pullOnStartup() {
   if (!SYNC_URL) return;
+  document.getElementById('startup-overlay').classList.add('active');
   updateSyncStatus('Đang tải dữ liệu mới nhất...', 'syncing');
   SyncEngine.setDot('orange');
   try {
@@ -778,6 +791,7 @@ async function pullOnStartup() {
       const cloudGroups = result.groups || [];
       const cloudGuests = guestsFromSheetFormat(result.guests || []);
       if (cloudGroups.length === 0) {
+        document.getElementById('startup-overlay').classList.remove('active');
         SyncEngine.setDot('green');
         updateSyncStatus('', '');
         return; // Sheet rỗng, giữ nguyên local
@@ -802,15 +816,18 @@ async function pullOnStartup() {
       if (result.version) SyncEngine.localVersion = result.version;
       SyncEngine.lastSyncTime = Date.now();
       localStorage.setItem('lastSyncTime', new Date().toISOString());
+      document.getElementById('startup-overlay').classList.remove('active');
       SyncEngine.setDot('green');
       SyncEngine.updateAgo();
       updateSyncStatus('', '');
       await loadAndRender();
     } else {
+      document.getElementById('startup-overlay').classList.remove('active');
       SyncEngine.setDot('red');
       updateSyncStatus('Lỗi tải: ' + (result.message || ''), 'error');
     }
   } catch (e) {
+    document.getElementById('startup-overlay').classList.remove('active');
     SyncEngine.setDot('red');
     updateSyncStatus('Không kết nối được Cloud', 'error');
     console.warn('pullOnStartup error:', e.message);
