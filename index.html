@@ -141,6 +141,17 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
 .meal-tag[data-meal="sang12_9h"].active { background: #e91e63; }
 .meal-tag[data-meal="no_meal"].active { background: #795548; }
 .meal-tag:hover { opacity: 0.8; }
+
+/* Bus tags */
+.bus-tags { display: inline-flex; gap: 3px; margin-left: 4px; flex-wrap: wrap; }
+.bus-tag { font-size: 0.6em; padding: 1px 4px; border-radius: 4px; cursor: pointer; user-select: none; border: 1px solid var(--border); background: #f5f5f5; color: var(--text-light); transition: all 0.15s; line-height: 1.4; white-space: nowrap; }
+.bus-tag.active { border-color: transparent; color: #fff; font-weight: 600; }
+.bus-tag[data-bus="xe30_hn_ve"].active   { background: #00897b; }
+.bus-tag[data-bus="xe30_len_hn"].active  { background: #00acc1; }
+.bus-tag[data-bus="xe30_don_dau"].active { background: #e53935; }
+.bus-tag[data-bus="xe45_hn_ve"].active   { background: #3949ab; }
+.bus-tag[data-bus="xe45_len_hn"].active  { background: #8e24aa; }
+.bus-tag:hover { opacity: 0.8; }
 .meal-checkboxes { display: flex; gap: 10px; flex-wrap: wrap; }
 .meal-checkboxes label { display: flex; align-items: center; gap: 4px; font-size: 0.9em; cursor: pointer; }
 .meal-checkboxes input { accent-color: var(--primary); }
@@ -153,6 +164,11 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
 .meal-stat-badge.sang12 { background: #9c27b0; }
 .meal-stat-badge.sang12_9h { background: #e91e63; }
 .meal-stat-badge.no_meal { background: #795548; }
+.meal-stat-badge.xe30_hn_ve   { background: #00897b; }
+.meal-stat-badge.xe30_len_hn  { background: #00acc1; }
+.meal-stat-badge.xe30_don_dau { background: #e53935; }
+.meal-stat-badge.xe45_hn_ve   { background: #3949ab; }
+.meal-stat-badge.xe45_len_hn  { background: #8e24aa; }
 
 /* Hidden file input */
 .hidden { display: none; }
@@ -234,6 +250,26 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
   <div class="stat-card" style="border-left: 3px solid #ff5722; cursor:pointer;" onclick="showUnconfirmedList()" title="Click để xem danh sách">
     <div class="num" id="stat-unconfirmed" style="color:#ff5722;">0</div>
     <div class="label">Đã mời, chưa chốt cỗ</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #00897b;">
+    <div class="num" id="stat-xe30_hn_ve" style="color:#00897b;">0</div>
+    <div class="label">Xe 30 - HN về</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #00acc1;">
+    <div class="num" id="stat-xe30_len_hn" style="color:#00acc1;">0</div>
+    <div class="label">Xe 30 - lên HN</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #e53935;">
+    <div class="num" id="stat-xe30_don_dau" style="color:#e53935;">0</div>
+    <div class="label">Xe 30 - đón dâu</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #3949ab;">
+    <div class="num" id="stat-xe45_hn_ve" style="color:#3949ab;">0</div>
+    <div class="label">Xe 45 - HN về</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #8e24aa;">
+    <div class="num" id="stat-xe45_len_hn" style="color:#8e24aa;">0</div>
+    <div class="label">Xe 45 - lên HN</div>
   </div>
 </div>
 
@@ -413,6 +449,14 @@ const MEALS = [
   { key: 'chieu11', label: 'Chiều 11 (4h)', short: 'C11' },
   { key: 'sang12', label: 'Sáng 12 (7h)', short: 'S12' },
   { key: 'sang12_9h', label: 'Sáng 12 (9h)', short: '9h' }
+];
+
+const BUSES = [
+  { key: 'xe30_hn_ve',   label: 'Xe 30 chỗ HN về',      short: '30↓HN' },
+  { key: 'xe30_len_hn',  label: 'Xe 30 chỗ lên HN',     short: '30↑HN' },
+  { key: 'xe30_don_dau', label: 'Xe 30 chỗ đón dâu',    short: '30♥'   },
+  { key: 'xe45_hn_ve',   label: 'Xe 45 chỗ HN về',      short: '45↓HN' },
+  { key: 'xe45_len_hn',  label: 'Xe 45 chỗ lên HN',     short: '45↑HN' }
 ];
 
 function openDB() {
@@ -878,6 +922,12 @@ function renderStats() {
   const unconfirmedCount = allGuests.filter(g => g.invited && !(g.meal || []).length && !g.noMeal).length;
   document.getElementById('stat-unconfirmed').textContent = unconfirmedCount;
 
+  // Thống kê xe
+  for (const b of BUSES) {
+    const cnt = allGuests.filter(g => g[b.key]).reduce((s, g) => s + (g.count || 0), 0);
+    document.getElementById('stat-' + b.key).textContent = cnt;
+  }
+
   renderCategoryStats();
 }
 
@@ -961,6 +1011,10 @@ function renderTree() {
       }
       const noMealP = guestsInGroup.filter(g => g.noMeal).reduce((s, g) => s + (g.count || 0), 0);
       if (noMealP > 0) mealStatsHtml += `<span class="meal-stat-badge no_meal">KCỗ: ${noMealP}</span>`;
+      for (const b of BUSES) {
+        const bp = guestsInGroup.filter(g => g[b.key]).reduce((s, g) => s + (g.count || 0), 0);
+        if (bp > 0) mealStatsHtml += `<span class="meal-stat-badge ${b.key}">${b.short}: ${bp}</span>`;
+      }
 
       let guestRows = '';
       const displayGuests = searchTerm || filterStatus !== 'all' ? filteredGuests : guestsInGroup;
@@ -975,10 +1029,16 @@ function renderTree() {
         const noMealActive = gt.noMeal ? 'active' : '';
         mealHtml += `<span class="meal-tag ${noMealActive}" data-meal="no_meal" onclick="toggleNoMeal(${gt.id},this)" title="Không ăn cỗ">KCỗ</span>`;
         mealHtml += '</span>';
+        let busHtml = '<span class="bus-tags">';
+        for (const b of BUSES) {
+          const active = gt[b.key] ? 'active' : '';
+          busHtml += `<span class="bus-tag ${active}" data-bus="${b.key}" onclick="toggleBus(${gt.id},'${b.key}',this)" title="${b.label}">${b.short}</span>`;
+        }
+        busHtml += '</span>';
         guestRows += `<div class="guest-row ${gt.invited ? 'invited' : ''}">
           <input type="checkbox" class="guest-check" ${gt.invited ? 'checked' : ''} onchange="toggleInvited(${gt.id}, this.checked, this)" title="Đánh dấu đã mời">
           <span class="guest-name">${nameHtml}</span>
-          ${mealHtml}
+          ${mealHtml}${busHtml}
           <span class="guest-count">${gt.count || '?'}</span>
           ${gt.note ? `<span class="guest-note" title="${escHtml(gt.note)}">${escHtml(gt.note)}</span>` : ''}
           <span class="guest-actions">
@@ -1162,6 +1222,17 @@ async function toggleMeal(guestId, mealKey, tagEl) {
       if (row) { const noTag = row.querySelector('.meal-tag[data-meal="no_meal"]'); if (noTag) noTag.classList.remove('active'); }
     }
   }
+  await putGuest(guest);
+  renderStats();
+  SyncEngine.scheduleAutoSync();
+}
+
+async function toggleBus(guestId, busKey, tagEl) {
+  const guest = allGuests.find(g => g.id === guestId);
+  if (!guest) return;
+  guest[busKey] = !guest[busKey];
+  if (guest[busKey]) tagEl.classList.add('active');
+  else tagEl.classList.remove('active');
   await putGuest(guest);
   renderStats();
   SyncEngine.scheduleAutoSync();
@@ -1613,6 +1684,11 @@ function guestsToSheetFormat(guests) {
     sang12: (g.meal || []).includes('sang12'),
     sang12_9h: (g.meal || []).includes('sang12_9h'),
     noMeal: !!g.noMeal,
+    xe30_hn_ve:   !!g.xe30_hn_ve,
+    xe30_len_hn:  !!g.xe30_len_hn,
+    xe30_don_dau: !!g.xe30_don_dau,
+    xe45_hn_ve:   !!g.xe45_hn_ve,
+    xe45_len_hn:  !!g.xe45_len_hn,
     note: g.note || '',
     order: g.order || 0
   }));
@@ -1620,20 +1696,26 @@ function guestsToSheetFormat(guests) {
 
 // Convert Sheet format → IndexedDB data (boolean columns → meal array)
 function guestsFromSheetFormat(sheetGuests) {
+  const bool = v => v === true || v === 'TRUE';
   return sheetGuests.map(g => {
     const meal = [];
-    if (g.trua11 === true || g.trua11 === 'TRUE') meal.push('trua11');
-    if (g.chieu11 === true || g.chieu11 === 'TRUE') meal.push('chieu11');
-    if (g.sang12 === true || g.sang12 === 'TRUE') meal.push('sang12');
-    if (g.sang12_9h === true || g.sang12_9h === 'TRUE') meal.push('sang12_9h');
+    if (bool(g.trua11))    meal.push('trua11');
+    if (bool(g.chieu11))   meal.push('chieu11');
+    if (bool(g.sang12))    meal.push('sang12');
+    if (bool(g.sang12_9h)) meal.push('sang12_9h');
     return {
       id: g.id,
       groupId: g.groupId,
       name: String(g.name || ''),
       count: parseInt(g.count) || 0,
-      invited: g.invited === true || g.invited === 'TRUE',
+      invited: bool(g.invited),
       meal,
-      noMeal: g.noMeal === true || g.noMeal === 'TRUE',
+      noMeal:       bool(g.noMeal),
+      xe30_hn_ve:   bool(g.xe30_hn_ve),
+      xe30_len_hn:  bool(g.xe30_len_hn),
+      xe30_don_dau: bool(g.xe30_don_dau),
+      xe45_hn_ve:   bool(g.xe45_hn_ve),
+      xe45_len_hn:  bool(g.xe45_len_hn),
       note: String(g.note || ''),
       order: parseInt(g.order) || 0
     };
