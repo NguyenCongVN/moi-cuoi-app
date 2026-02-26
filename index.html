@@ -763,6 +763,58 @@ async function init() {
     showToast('Đã tải dữ liệu ban đầu!', 'success');
   }
   await loadAndRender();
+  // Tự động pull mới nhất từ Cloud khi load trang
+  await pullOnStartup();
+}
+
+async function pullOnStartup() {
+  if (!SYNC_URL) return;
+  updateSyncStatus('Đang tải dữ liệu mới nhất...', 'syncing');
+  SyncEngine.setDot('orange');
+  try {
+    const response = await fetch(SYNC_URL + '?action=read');
+    const result = await response.json();
+    if (result.status === 'ok') {
+      const cloudGroups = result.groups || [];
+      const cloudGuests = guestsFromSheetFormat(result.guests || []);
+      if (cloudGroups.length === 0) {
+        SyncEngine.setDot('green');
+        updateSyncStatus('', '');
+        return; // Sheet rỗng, giữ nguyên local
+      }
+      await clearAll();
+      const idMap = {};
+      for (const gr of cloudGroups) {
+        const oldId = gr.id;
+        delete gr.id;
+        gr.name = String(gr.name || '');
+        gr.category = String(gr.category || '');
+        gr.merged = String(gr.merged || '');
+        gr.order = parseInt(gr.order) || 0;
+        const newId = await addGroup(gr);
+        idMap[oldId] = newId;
+      }
+      for (const gt of cloudGuests) {
+        delete gt.id;
+        gt.groupId = idMap[gt.groupId] || gt.groupId;
+        await addGuest(gt);
+      }
+      if (result.version) SyncEngine.localVersion = result.version;
+      SyncEngine.lastSyncTime = Date.now();
+      localStorage.setItem('lastSyncTime', new Date().toISOString());
+      SyncEngine.setDot('green');
+      SyncEngine.updateAgo();
+      updateSyncStatus('', '');
+      await loadAndRender();
+    } else {
+      SyncEngine.setDot('red');
+      updateSyncStatus('Lỗi tải: ' + (result.message || ''), 'error');
+    }
+  } catch (e) {
+    SyncEngine.setDot('red');
+    updateSyncStatus('Không kết nối được Cloud', 'error');
+    console.warn('pullOnStartup error:', e.message);
+  }
 }
 
 async function seedData() {
