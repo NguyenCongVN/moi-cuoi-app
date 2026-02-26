@@ -305,6 +305,14 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
     <option value="sang12_9h">Sáng 12 (9h)</option>
     <option value="no_meal">Không ăn cỗ</option>
     <option value="none">Chưa chọn buổi</option>
+    <option disabled>── Xe ──</option>
+    <option value="bus:xe30_hn_ve">Xe 30 - HN về</option>
+    <option value="bus:xe30_len_hn">Xe 30 - lên HN</option>
+    <option value="bus:xe30_don_dau">Xe 30 - đón dâu</option>
+    <option value="bus:xe45_hn_ve">Xe 45 - HN về</option>
+    <option value="bus:xe45_len_hn">Xe 45 - lên HN</option>
+    <option value="bus:xe_ve_t6">Về chiều thứ 6</option>
+    <option value="bus:xe_di_t6">Đi chiều thứ 6</option>
   </select>
   <div class="expand-btns">
     <button class="btn btn-outline btn-sm" onclick="expandAll()">Mở hết</button>
@@ -1004,6 +1012,7 @@ function renderTree() {
 
       if (filterMeal === 'none') filteredGuests = filteredGuests.filter(g => !(g.meal || []).length && !g.noMeal);
       else if (filterMeal === 'no_meal') filteredGuests = filteredGuests.filter(g => g.noMeal);
+      else if (filterMeal.startsWith('bus:')) filteredGuests = filteredGuests.filter(g => g[filterMeal.slice(4)]);
       else if (filterMeal !== 'all') filteredGuests = filteredGuests.filter(g => (g.meal || []).includes(filterMeal));
 
       if (searchTerm) {
