@@ -1562,7 +1562,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 
 // ===================== SYNC =====================
 const DEFAULT_SYNC_URL = 'https://script.google.com/macros/s/AKfycbxADH4NMkIZXKi-pUIrZOtxg952PDfPHQrW9zFPOtoSoV3NPy0FMZAUCKqFWYos3jtEMw/exec';
-let SYNC_URL = localStorage.getItem('syncUrl') || DEFAULT_SYNC_URL;
+let SYNC_URL = DEFAULT_SYNC_URL;
 const PUSH_PASSWORD = '1234567890';
 
 function updateSyncStatus(text, type) {
@@ -1739,15 +1739,10 @@ function openSyncSetup() {
 
 function saveSyncUrl() {
   const url = document.getElementById('sync-url-input').value.trim();
-  SYNC_URL = url;
-  localStorage.setItem('syncUrl', url);
+  SYNC_URL = url || DEFAULT_SYNC_URL;
   closeModal('modal-sync');
   initSyncBar();
-  if (url) {
-    showToast('Đã lưu URL sync!', 'success');
-  } else {
-    showToast('Đã xóa URL sync', '');
-  }
+  showToast('Đã cập nhật URL sync!', 'success');
 }
 
 async function testSyncConnection() {
