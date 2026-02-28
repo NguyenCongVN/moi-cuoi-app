@@ -414,7 +414,16 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
     <div class="form-group">
       <label>Mừng cưới</label>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <input type="number" id="guest-gift-amount" placeholder="Số tiền (VND)" min="0" step="100000" style="flex:1;min-width:130px;">
+        <select id="guest-gift-amount-select" style="flex:1;min-width:130px;" onchange="onGiftAmountSelect(this.value)">
+          <option value="">-- Chưa mừng --</option>
+          <option value="300000">300K</option>
+          <option value="500000">500K</option>
+          <option value="1000000">1M</option>
+          <option value="1500000">1.5M</option>
+          <option value="2000000">2M</option>
+          <option value="__other__">Khác...</option>
+        </select>
+        <input type="number" id="guest-gift-amount" placeholder="Nhập số tiền" min="0" step="100000" style="flex:1;min-width:120px;display:none;">
         <select id="guest-gift-type" style="flex:1;min-width:120px;">
           <option value="">-- Loại --</option>
           <option value="bo_me">Mừng bố mẹ</option>
@@ -1429,13 +1438,46 @@ async function confirmDeleteGroup(id) {
   SyncEngine.scheduleAutoSync();
 }
 
+// Gift amount helpers
+const GIFT_PRESETS = [300000, 500000, 1000000, 1500000, 2000000];
+
+function onGiftAmountSelect(val) {
+  const input = document.getElementById('guest-gift-amount');
+  if (val === '__other__') {
+    input.style.display = '';
+    input.value = '';
+    input.focus();
+  } else {
+    input.style.display = 'none';
+    input.value = val;
+  }
+}
+
+function setGiftAmountUI(amount) {
+  const sel = document.getElementById('guest-gift-amount-select');
+  const input = document.getElementById('guest-gift-amount');
+  if (!amount) {
+    sel.value = '';
+    input.style.display = 'none';
+    input.value = '';
+  } else if (GIFT_PRESETS.includes(Number(amount))) {
+    sel.value = String(amount);
+    input.style.display = 'none';
+    input.value = amount;
+  } else {
+    sel.value = '__other__';
+    input.style.display = '';
+    input.value = amount;
+  }
+}
+
 // Guest
 function openAddGuest(groupId) {
   document.getElementById('modal-guest-title').textContent = 'Thêm khách';
   document.getElementById('guest-name-input').value = '';
   document.getElementById('guest-count-input').value = '1';
   document.getElementById('guest-note-input').value = '';
-  document.getElementById('guest-gift-amount').value = '';
+  setGiftAmountUI(null);
   document.getElementById('guest-gift-type').value = '';
   document.getElementById('guest-group-id').value = groupId;
   document.getElementById('guest-edit-id').value = '';
@@ -1451,7 +1493,7 @@ function openEditGuest(id) {
   document.getElementById('guest-name-input').value = gt.name;
   document.getElementById('guest-count-input').value = gt.count || 0;
   document.getElementById('guest-note-input').value = gt.note || '';
-  document.getElementById('guest-gift-amount').value = gt.giftAmount || '';
+  setGiftAmountUI(gt.giftAmount);
   document.getElementById('guest-gift-type').value = gt.giftType || '';
   document.getElementById('guest-group-id').value = gt.groupId;
   document.getElementById('guest-edit-id').value = id;
