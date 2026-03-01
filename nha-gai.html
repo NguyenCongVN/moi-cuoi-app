@@ -106,6 +106,12 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
 .modal textarea { resize: vertical; min-height: 60px; }
 .modal .btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 15px; }
 
+/* Startup loading overlay */
+.startup-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; justify-content: center; align-items: center; flex-direction: column; gap: 16px; }
+.startup-overlay.active { display: flex; }
+.startup-overlay .spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+.startup-overlay .msg { color: #fff; font-size: 1em; font-weight: 500; }
+
 /* Toast */
 .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
 .toast { background: #333; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 0.85em; animation: slideIn 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
@@ -132,8 +138,22 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
 .meal-tag[data-meal="trua11"].active { background: #2196f3; }
 .meal-tag[data-meal="chieu11"].active { background: #ff9800; }
 .meal-tag[data-meal="sang12"].active { background: #9c27b0; }
-.meal-tag[data-meal="sang12_9h"].active { background: #1565c0; }
+.meal-tag[data-meal="sang12_9h"].active { background: #e91e63; }
+.meal-tag[data-meal="no_meal"].active { background: #795548; }
 .meal-tag:hover { opacity: 0.8; }
+
+/* Bus tags */
+.bus-tags { display: inline-flex; gap: 3px; margin-left: 4px; flex-wrap: wrap; }
+.bus-tag { font-size: 0.6em; padding: 1px 4px; border-radius: 4px; cursor: pointer; user-select: none; border: 1px solid var(--border); background: #f5f5f5; color: var(--text-light); transition: all 0.15s; line-height: 1.4; white-space: nowrap; }
+.bus-tag.active { border-color: transparent; color: #fff; font-weight: 600; }
+.bus-tag[data-bus="xe30_hn_ve"].active   { background: #00897b; }
+.bus-tag[data-bus="xe30_len_hn"].active  { background: #00acc1; }
+.bus-tag[data-bus="xe30_don_dau"].active { background: #e53935; }
+.bus-tag[data-bus="xe45_hn_ve"].active   { background: #3949ab; }
+.bus-tag[data-bus="xe45_len_hn"].active  { background: #8e24aa; }
+.bus-tag[data-bus="xe_ve_t6"].active     { background: #f57f17; }
+.bus-tag[data-bus="xe_di_t6"].active     { background: #2e7d32; }
+.bus-tag:hover { opacity: 0.8; }
 .meal-checkboxes { display: flex; gap: 10px; flex-wrap: wrap; }
 .meal-checkboxes label { display: flex; align-items: center; gap: 4px; font-size: 0.9em; cursor: pointer; }
 .meal-checkboxes input { accent-color: var(--primary); }
@@ -144,7 +164,26 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
 .meal-stat-badge.trua11 { background: #2196f3; }
 .meal-stat-badge.chieu11 { background: #ff9800; }
 .meal-stat-badge.sang12 { background: #9c27b0; }
-.meal-stat-badge.sang12_9h { background: #1565c0; }
+.meal-stat-badge.sang12_9h { background: #e91e63; }
+.meal-stat-badge.no_meal { background: #795548; }
+.meal-stat-badge.xe30_hn_ve   { background: #00897b; }
+.meal-stat-badge.xe30_len_hn  { background: #00acc1; }
+.meal-stat-badge.xe30_don_dau { background: #e53935; }
+.meal-stat-badge.xe45_hn_ve   { background: #3949ab; }
+.meal-stat-badge.xe45_len_hn  { background: #8e24aa; }
+.meal-stat-badge.xe_ve_t6     { background: #f57f17; }
+.meal-stat-badge.xe_di_t6     { background: #2e7d32; }
+
+/* Gift */
+.gift-info { display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; font-size: 0.72em; }
+.gift-amount { color: #e65100; font-weight: 600; cursor: pointer; padding: 1px 5px; border-radius: 4px; border: 1px dashed #e65100; background: #fff3e0; white-space: nowrap; }
+.gift-amount:hover { background: #ffe0b2; }
+.gift-amount.empty { color: var(--text-light); border-color: var(--border); background: #f5f5f5; font-weight: 400; }
+.gift-type { padding: 1px 5px; border-radius: 4px; font-weight: 600; color: #fff; font-size: 0.9em; cursor: pointer; }
+.gift-type.bo_me    { background: #1565c0; }
+.gift-type.thanh_cong { background: #2e7d32; }
+.gift-type.hoai     { background: #6a1b9a; }
+.gift-type.none     { background: #9e9e9e; }
 
 /* Hidden file input */
 .hidden { display: none; }
@@ -219,6 +258,58 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
     <div class="num" id="stat-sang12_9h" style="color:#e91e63;">0</div>
     <div class="label">Sáng 12 - 9h (người)</div>
   </div>
+  <div class="stat-card" style="border-left: 3px solid #795548;">
+    <div class="num" id="stat-no_meal" style="color:#795548;">0</div>
+    <div class="label">Không ăn cỗ (người)</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #ff5722; cursor:pointer;" onclick="showUnconfirmedList()" title="Click để xem danh sách">
+    <div class="num" id="stat-unconfirmed" style="color:#ff5722;">0</div>
+    <div class="label">Đã mời, chưa chốt cỗ</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #00897b;">
+    <div class="num" id="stat-xe30_hn_ve" style="color:#00897b;">0</div>
+    <div class="label">Xe 30 - HN về</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #00acc1;">
+    <div class="num" id="stat-xe30_len_hn" style="color:#00acc1;">0</div>
+    <div class="label">Xe 30 - lên HN</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #e53935;">
+    <div class="num" id="stat-xe30_don_dau" style="color:#e53935;">0</div>
+    <div class="label">Xe 30 - đón dâu</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #3949ab;">
+    <div class="num" id="stat-xe45_hn_ve" style="color:#3949ab;">0</div>
+    <div class="label">Xe 45 - HN về</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #8e24aa;">
+    <div class="num" id="stat-xe45_len_hn" style="color:#8e24aa;">0</div>
+    <div class="label">Xe 45 - lên HN</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #f57f17;">
+    <div class="num" id="stat-xe_ve_t6" style="color:#f57f17;">0</div>
+    <div class="label">Về chiều thứ 6</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #2e7d32;">
+    <div class="num" id="stat-xe_di_t6" style="color:#2e7d32;">0</div>
+    <div class="label">Đi chiều thứ 6</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #e65100;">
+    <div class="num" id="stat-gift-total" style="color:#e65100;font-size:1.2em;">0</div>
+    <div class="label">Tổng mừng cưới</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #1565c0;">
+    <div class="num" id="stat-gift-bo_me" style="color:#1565c0;font-size:1.2em;">0</div>
+    <div class="label">Mừng ông bà</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #2e7d32;">
+    <div class="num" id="stat-gift-thanh_cong" style="color:#2e7d32;font-size:1.2em;">0</div>
+    <div class="label">Mừng Hoài</div>
+  </div>
+  <div class="stat-card" style="border-left: 3px solid #6a1b9a;">
+    <div class="num" id="stat-gift-hoai" style="color:#6a1b9a;font-size:1.2em;">0</div>
+    <div class="label">Mừng Thành Công</div>
+  </div>
 </div>
 
 <div class="category-stats" id="category-stats-section" style="display:none">
@@ -231,6 +322,7 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
     <option value="all">Tất cả</option>
     <option value="invited">Đã mời</option>
     <option value="pending">Chưa mời</option>
+    <option value="invited_no_meal">Đã mời, chưa chốt cỗ</option>
   </select>
   <select id="filter-meal">
     <option value="all">Mọi buổi</option>
@@ -238,7 +330,16 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
     <option value="chieu11">Chiều 11</option>
     <option value="sang12">Sáng 12 (7h)</option>
     <option value="sang12_9h">Sáng 12 (9h)</option>
+    <option value="no_meal">Không ăn cỗ</option>
     <option value="none">Chưa chọn buổi</option>
+    <option disabled>── Xe ──</option>
+    <option value="bus:xe30_hn_ve">Xe 30 - HN về</option>
+    <option value="bus:xe30_len_hn">Xe 30 - lên HN</option>
+    <option value="bus:xe30_don_dau">Xe 30 - đón dâu</option>
+    <option value="bus:xe45_hn_ve">Xe 45 - HN về</option>
+    <option value="bus:xe45_len_hn">Xe 45 - lên HN</option>
+    <option value="bus:xe_ve_t6">Về chiều thứ 6</option>
+    <option value="bus:xe_di_t6">Đi chiều thứ 6</option>
   </select>
   <div class="expand-btns">
     <button class="btn btn-outline btn-sm" onclick="expandAll()">Mở hết</button>
@@ -311,6 +412,27 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
       </div>
     </div>
     <div class="form-group">
+      <label>Mừng cưới</label>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="guest-gift-amount-select" style="flex:1;min-width:130px;" onchange="onGiftAmountSelect(this.value)">
+          <option value="">-- Chưa mừng --</option>
+          <option value="300000">300K</option>
+          <option value="500000">500K</option>
+          <option value="1000000">1M</option>
+          <option value="1500000">1.5M</option>
+          <option value="2000000">2M</option>
+          <option value="__other__">Khác...</option>
+        </select>
+        <input type="number" id="guest-gift-amount" placeholder="Nhập số tiền" min="0" step="100000" style="flex:1;min-width:120px;display:none;">
+        <select id="guest-gift-type" style="flex:1;min-width:120px;">
+          <option value="">-- Loại --</option>
+          <option value="bo_me">Mừng ông bà</option>
+          <option value="hoai">Mừng Hoài</option>
+          <option value="thanh_cong">Mừng Thành Công</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
       <label>Ghi chú</label>
       <textarea id="guest-note-input" placeholder="(tùy chọn)"></textarea>
     </div>
@@ -363,6 +485,24 @@ mark { background: #fff176; padding: 0 2px; border-radius: 2px; }
   </div>
 </div>
 
+<!-- Modal Danh sách chưa chốt cỗ -->
+<div class="modal-overlay" id="modal-unconfirmed">
+  <div class="modal" style="max-width:500px;">
+    <h3 style="color:#ff5722;">Đã mời nhưng chưa chốt cỗ</h3>
+    <p style="font-size:0.8em;color:var(--text-light);margin-bottom:10px;">Những người đã được mời nhưng chưa tick chọn buổi ăn cỗ nào.</p>
+    <div id="unconfirmed-list" style="max-height:60vh;overflow-y:auto;"></div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="closeModal('modal-unconfirmed')">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Startup Loading Overlay -->
+<div class="startup-overlay" id="startup-overlay">
+  <div class="spinner"></div>
+  <div class="msg">Đang tải dữ liệu mới nhất...</div>
+</div>
+
 <!-- Toast Container -->
 <div class="toast-container" id="toast-container"></div>
 
@@ -377,6 +517,16 @@ const MEALS = [
   { key: 'chieu11', label: 'Chiều 11 (4h)', short: 'C11' },
   { key: 'sang12', label: 'Sáng 12 (7h)', short: 'S12' },
   { key: 'sang12_9h', label: 'Sáng 12 (9h)', short: '9h' }
+];
+
+const BUSES = [
+  { key: 'xe30_hn_ve',   label: 'Xe 30 chỗ HN về',      short: '30↓HN' },
+  { key: 'xe30_len_hn',  label: 'Xe 30 chỗ lên HN',     short: '30↑HN' },
+  { key: 'xe30_don_dau', label: 'Xe 30 chỗ đón dâu',       short: '30♥'   },
+  { key: 'xe45_hn_ve',   label: 'Xe 45 chỗ HN về',         short: '45↓HN' },
+  { key: 'xe45_len_hn',  label: 'Xe 45 chỗ lên HN',        short: '45↑HN' },
+  { key: 'xe_ve_t6',     label: 'Về chiều thứ 6',           short: 'VềT6'  },
+  { key: 'xe_di_t6',     label: 'Đi chiều thứ 6',           short: 'ĐiT6'  }
 ];
 
 function openDB() {
@@ -478,13 +628,8 @@ function getSeedData() {
   const HOI_PHO = 'Hội phố';
   const HOI_BAN = 'Hội - Bạn bè';
 
-  // Dữ liệu mẫu - xóa và thêm danh sách thực tế của họ nhà gái
-  g('Gia đình ông bà ngoại', FAM, [
-    ['Ông ngoại',1],['Bà ngoại',1]
-  ]);
-
   g('Họ hàng nhà gái', FAM, [
-    ['(Chưa có dữ liệu - thêm vào đây)',1]
+    ['(Chưa có dữ liệu - kéo về từ Cloud hoặc thêm vào đây)',0]
   ]);
 
   return { groups, guests };
@@ -508,6 +653,63 @@ async function init() {
     showToast('Đã tải dữ liệu ban đầu!', 'success');
   }
   await loadAndRender();
+  // Tự động pull mới nhất từ Cloud khi load trang
+  await pullOnStartup();
+}
+
+async function pullOnStartup() {
+  if (!SYNC_URL) return;
+  document.getElementById('startup-overlay').classList.add('active');
+  updateSyncStatus('Đang tải dữ liệu mới nhất...', 'syncing');
+  SyncEngine.setDot('orange');
+  try {
+    const response = await fetch(SYNC_URL + '?action=read');
+    const result = await response.json();
+    if (result.status === 'ok') {
+      const cloudGroups = result.groups || [];
+      const cloudGuests = guestsFromSheetFormat(result.guests || []);
+      if (cloudGroups.length === 0) {
+        document.getElementById('startup-overlay').classList.remove('active');
+        SyncEngine.setDot('green');
+        updateSyncStatus('', '');
+        return; // Sheet rỗng, giữ nguyên local
+      }
+      await clearAll();
+      const idMap = {};
+      for (const gr of cloudGroups) {
+        const oldId = gr.id;
+        delete gr.id;
+        gr.name = String(gr.name || '');
+        gr.category = String(gr.category || '');
+        gr.merged = String(gr.merged || '');
+        gr.order = parseInt(gr.order) || 0;
+        const newId = await addGroup(gr);
+        idMap[oldId] = newId;
+      }
+      for (const gt of cloudGuests) {
+        delete gt.id;
+        gt.groupId = idMap[gt.groupId] || gt.groupId;
+        await addGuest(gt);
+      }
+      if (result.version) SyncEngine.localVersion = result.version;
+      SyncEngine.lastSyncTime = Date.now();
+      localStorage.setItem('lastSyncTime', new Date().toISOString());
+      document.getElementById('startup-overlay').classList.remove('active');
+      SyncEngine.setDot('green');
+      SyncEngine.updateAgo();
+      updateSyncStatus('', '');
+      await loadAndRender();
+    } else {
+      document.getElementById('startup-overlay').classList.remove('active');
+      SyncEngine.setDot('red');
+      updateSyncStatus('Lỗi tải: ' + (result.message || ''), 'error');
+    }
+  } catch (e) {
+    document.getElementById('startup-overlay').classList.remove('active');
+    SyncEngine.setDot('red');
+    updateSyncStatus('Không kết nối được Cloud', 'error');
+    console.warn('pullOnStartup error:', e.message);
+  }
 }
 
 async function seedData() {
@@ -545,6 +747,31 @@ function renderStats() {
     const people = allGuests.filter(g => (g.meal || []).includes(m.key)).reduce((s, g) => s + (g.count || 0), 0);
     document.getElementById('stat-' + m.key).textContent = people;
   }
+
+  // Thống kê không ăn cỗ
+  const noMealPeople = allGuests.filter(g => g.noMeal).reduce((s, g) => s + (g.count || 0), 0);
+  document.getElementById('stat-no_meal').textContent = noMealPeople;
+
+  // Thống kê đã mời nhưng chưa chốt cỗ (invited nhưng meal rỗng và chưa đánh dấu không ăn cỗ)
+  const unconfirmedCount = allGuests.filter(g => g.invited && !(g.meal || []).length && !g.noMeal).length;
+  document.getElementById('stat-unconfirmed').textContent = unconfirmedCount;
+
+  // Thống kê xe
+  for (const b of BUSES) {
+    const cnt = allGuests.filter(g => g[b.key]).reduce((s, g) => s + (g.count || 0), 0);
+    document.getElementById('stat-' + b.key).textContent = cnt;
+  }
+
+  // Thống kê mừng cưới
+  const fmtMoney = v => v >= 1000000 ? (v/1000000).toFixed(1).replace(/\.0$/,'') + 'M' : v >= 1000 ? (v/1000) + 'K' : String(v);
+  const giftTotal = allGuests.reduce((s, g) => s + (g.giftAmount || 0), 0);
+  const giftBM    = allGuests.filter(g => g.giftType === 'bo_me').reduce((s, g) => s + (g.giftAmount || 0), 0);
+  const giftTC    = allGuests.filter(g => g.giftType === 'thanh_cong').reduce((s, g) => s + (g.giftAmount || 0), 0);
+  const giftH     = allGuests.filter(g => g.giftType === 'hoai').reduce((s, g) => s + (g.giftAmount || 0), 0);
+  document.getElementById('stat-gift-total').textContent   = giftTotal ? fmtMoney(giftTotal) : '0';
+  document.getElementById('stat-gift-bo_me').textContent   = giftBM    ? fmtMoney(giftBM)    : '0';
+  document.getElementById('stat-gift-thanh_cong').textContent = giftTC ? fmtMoney(giftTC)    : '0';
+  document.getElementById('stat-gift-hoai').textContent    = giftH     ? fmtMoney(giftH)     : '0';
 
   renderCategoryStats();
 }
@@ -604,8 +831,11 @@ function renderTree() {
 
       if (filterStatus === 'invited') filteredGuests = guestsInGroup.filter(g => g.invited);
       else if (filterStatus === 'pending') filteredGuests = guestsInGroup.filter(g => !g.invited);
+      else if (filterStatus === 'invited_no_meal') filteredGuests = guestsInGroup.filter(g => g.invited && !(g.meal || []).length && !g.noMeal);
 
-      if (filterMeal === 'none') filteredGuests = filteredGuests.filter(g => !(g.meal || []).length);
+      if (filterMeal === 'none') filteredGuests = filteredGuests.filter(g => !(g.meal || []).length && !g.noMeal);
+      else if (filterMeal === 'no_meal') filteredGuests = filteredGuests.filter(g => g.noMeal);
+      else if (filterMeal.startsWith('bus:')) filteredGuests = filteredGuests.filter(g => g[filterMeal.slice(4)]);
       else if (filterMeal !== 'all') filteredGuests = filteredGuests.filter(g => (g.meal || []).includes(filterMeal));
 
       if (searchTerm) {
@@ -625,9 +855,15 @@ function renderTree() {
         const mp = guestsInGroup.filter(g => (g.meal || []).includes(m.key)).reduce((s, g) => s + (g.count || 0), 0);
         if (mp > 0) mealStatsHtml += `<span class="meal-stat-badge ${m.key}">${m.short}: ${mp}</span>`;
       }
+      const noMealP = guestsInGroup.filter(g => g.noMeal).reduce((s, g) => s + (g.count || 0), 0);
+      if (noMealP > 0) mealStatsHtml += `<span class="meal-stat-badge no_meal">KCỗ: ${noMealP}</span>`;
+      for (const b of BUSES) {
+        const bp = guestsInGroup.filter(g => g[b.key]).reduce((s, g) => s + (g.count || 0), 0);
+        if (bp > 0) mealStatsHtml += `<span class="meal-stat-badge ${b.key}">${b.short}: ${bp}</span>`;
+      }
 
       let guestRows = '';
-      const displayGuests = searchTerm || filterStatus !== 'all' ? filteredGuests : guestsInGroup;
+      const displayGuests = searchTerm || filterStatus !== 'all' || filterMeal !== 'all' ? filteredGuests : guestsInGroup;
       for (const gt of displayGuests) {
         const nameHtml = searchTerm ? highlightText(gt.name, searchTerm) : escHtml(gt.name);
         const guestMeal = gt.meal || [];
@@ -636,13 +872,28 @@ function renderTree() {
           const active = guestMeal.includes(m.key) ? 'active' : '';
           mealHtml += `<span class="meal-tag ${active}" data-meal="${m.key}" onclick="toggleMeal(${gt.id},'${m.key}',this)" title="${m.label}">${m.short}</span>`;
         }
+        const noMealActive = gt.noMeal ? 'active' : '';
+        mealHtml += `<span class="meal-tag ${noMealActive}" data-meal="no_meal" onclick="toggleNoMeal(${gt.id},this)" title="Không ăn cỗ">KCỗ</span>`;
         mealHtml += '</span>';
+        let busHtml = '<span class="bus-tags">';
+        for (const b of BUSES) {
+          const active = gt[b.key] ? 'active' : '';
+          busHtml += `<span class="bus-tag ${active}" data-bus="${b.key}" onclick="toggleBus(${gt.id},'${b.key}',this)" title="${b.label}">${b.short}</span>`;
+        }
+        busHtml += '</span>';
         guestRows += `<div class="guest-row ${gt.invited ? 'invited' : ''}">
           <input type="checkbox" class="guest-check" ${gt.invited ? 'checked' : ''} onchange="toggleInvited(${gt.id}, this.checked, this)" title="Đánh dấu đã mời">
           <span class="guest-name">${nameHtml}</span>
-          ${mealHtml}
+          ${mealHtml}${busHtml}
           <span class="guest-count">${gt.count || '?'}</span>
           ${gt.note ? `<span class="guest-note" title="${escHtml(gt.note)}">${escHtml(gt.note)}</span>` : ''}
+          ${(gt.giftAmount != null || gt.giftType) ? (() => {
+            const typeLabels = { bo_me: 'OB', thanh_cong: 'TC', hoai: 'H' };
+            const amtStr = gt.giftAmount != null ? (gt.giftAmount >= 1000000 ? (gt.giftAmount/1000000).toFixed(1).replace(/\.0$/,'')+'M' : gt.giftAmount >= 1000 ? (gt.giftAmount/1000)+'K' : String(gt.giftAmount)) : '?';
+            const typeClass = gt.giftType || 'none';
+            const typeShort = typeLabels[gt.giftType] || '';
+            return `<span class="gift-info"><span class="gift-amount" onclick="openEditGuest(${gt.id})" title="Mừng cưới">${amtStr}</span>${typeShort ? `<span class="gift-type ${typeClass}">${typeShort}</span>` : ''}</span>`;
+          })() : ''}
           <span class="guest-actions">
             <button class="btn btn-outline btn-sm" onclick="openEditGuest(${gt.id})" title="Sửa">&#9998;</button>
             <button class="btn btn-outline btn-sm" onclick="confirmDeleteGuest(${gt.id})" title="Xóa">&times;</button>
@@ -737,6 +988,39 @@ function toggleCategoryStats() {
   sec.style.display = sec.style.display === 'none' ? '' : 'none';
 }
 
+function showUnconfirmedList() {
+  const unconfirmed = allGuests.filter(g => g.invited && !(g.meal || []).length && !g.noMeal);
+  const listEl = document.getElementById('unconfirmed-list');
+
+  if (unconfirmed.length === 0) {
+    listEl.innerHTML = '<p style="text-align:center;padding:20px;color:#999;">Tất cả đã chốt cỗ!</p>';
+  } else {
+    // Nhóm theo group
+    const byGroup = {};
+    for (const g of unconfirmed) {
+      if (!byGroup[g.groupId]) byGroup[g.groupId] = [];
+      byGroup[g.groupId].push(g);
+    }
+
+    let html = '';
+    for (const [groupId, guests] of Object.entries(byGroup)) {
+      const gr = allGroups.find(g => g.id === parseInt(groupId));
+      const groupName = gr ? gr.name : 'Không rõ';
+      html += `<div style="margin-bottom:10px;">
+        <div style="font-weight:600;font-size:0.9em;color:var(--primary);padding:4px 0;border-bottom:1px solid #f0f0f0;">${escHtml(groupName)}</div>`;
+      for (const gt of guests) {
+        html += `<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;font-size:0.85em;">
+          <span style="flex:1;">${escHtml(gt.name)}</span>
+          <span style="color:var(--text-light);font-size:0.8em;">${gt.count || '?'} người</span>
+        </div>`;
+      }
+      html += '</div>';
+    }
+    listEl.innerHTML = html;
+  }
+  openModal('modal-unconfirmed');
+}
+
 // ===================== GUEST ACTIONS =====================
 async function toggleInvited(guestId, checked, checkboxEl) {
   const guest = allGuests.find(g => g.id === guestId);
@@ -784,6 +1068,42 @@ async function toggleMeal(guestId, mealKey, tagEl) {
   } else {
     guest.meal.push(mealKey);
     tagEl.classList.add('active');
+    // Bỏ "Không ăn cỗ" khi chọn buổi
+    if (guest.noMeal) {
+      guest.noMeal = false;
+      const row = tagEl.closest('.meal-tags');
+      if (row) { const noTag = row.querySelector('.meal-tag[data-meal="no_meal"]'); if (noTag) noTag.classList.remove('active'); }
+    }
+  }
+  await putGuest(guest);
+  renderStats();
+  SyncEngine.scheduleAutoSync();
+}
+
+async function toggleBus(guestId, busKey, tagEl) {
+  const guest = allGuests.find(g => g.id === guestId);
+  if (!guest) return;
+  guest[busKey] = !guest[busKey];
+  if (guest[busKey]) tagEl.classList.add('active');
+  else tagEl.classList.remove('active');
+  await putGuest(guest);
+  renderStats();
+  SyncEngine.scheduleAutoSync();
+}
+
+async function toggleNoMeal(guestId, tagEl) {
+  const guest = allGuests.find(g => g.id === guestId);
+  if (!guest) return;
+  guest.noMeal = !guest.noMeal;
+  if (guest.noMeal) {
+    // Bỏ tất cả buổi cỗ khi đánh dấu không ăn cỗ
+    guest.meal = [];
+    tagEl.classList.add('active');
+    // Bỏ active các meal tag khác
+    const row = tagEl.closest('.meal-tags');
+    if (row) row.querySelectorAll('.meal-tag[data-meal]:not([data-meal="no_meal"])').forEach(t => t.classList.remove('active'));
+  } else {
+    tagEl.classList.remove('active');
   }
   await putGuest(guest);
   renderStats();
@@ -882,12 +1202,47 @@ async function confirmDeleteGroup(id) {
   SyncEngine.scheduleAutoSync();
 }
 
+// Gift amount helpers
+const GIFT_PRESETS = [300000, 500000, 1000000, 1500000, 2000000];
+
+function onGiftAmountSelect(val) {
+  const input = document.getElementById('guest-gift-amount');
+  if (val === '__other__') {
+    input.style.display = '';
+    input.value = '';
+    input.focus();
+  } else {
+    input.style.display = 'none';
+    input.value = val;
+  }
+}
+
+function setGiftAmountUI(amount) {
+  const sel = document.getElementById('guest-gift-amount-select');
+  const input = document.getElementById('guest-gift-amount');
+  if (!amount) {
+    sel.value = '';
+    input.style.display = 'none';
+    input.value = '';
+  } else if (GIFT_PRESETS.includes(Number(amount))) {
+    sel.value = String(amount);
+    input.style.display = 'none';
+    input.value = amount;
+  } else {
+    sel.value = '__other__';
+    input.style.display = '';
+    input.value = amount;
+  }
+}
+
 // Guest
 function openAddGuest(groupId) {
   document.getElementById('modal-guest-title').textContent = 'Thêm khách';
   document.getElementById('guest-name-input').value = '';
   document.getElementById('guest-count-input').value = '1';
   document.getElementById('guest-note-input').value = '';
+  setGiftAmountUI(null);
+  document.getElementById('guest-gift-type').value = '';
   document.getElementById('guest-group-id').value = groupId;
   document.getElementById('guest-edit-id').value = '';
   MEALS.forEach(m => document.getElementById('meal-' + m.key).checked = false);
@@ -902,6 +1257,8 @@ function openEditGuest(id) {
   document.getElementById('guest-name-input').value = gt.name;
   document.getElementById('guest-count-input').value = gt.count || 0;
   document.getElementById('guest-note-input').value = gt.note || '';
+  setGiftAmountUI(gt.giftAmount);
+  document.getElementById('guest-gift-type').value = gt.giftType || '';
   document.getElementById('guest-group-id').value = gt.groupId;
   document.getElementById('guest-edit-id').value = id;
   const guestMeal = gt.meal || [];
@@ -914,6 +1271,9 @@ async function saveGuest() {
   const name = document.getElementById('guest-name-input').value.trim();
   const count = parseInt(document.getElementById('guest-count-input').value) || 0;
   const note = document.getElementById('guest-note-input').value.trim();
+  const giftAmountRaw = document.getElementById('guest-gift-amount').value.trim();
+  const giftAmount = giftAmountRaw ? parseInt(giftAmountRaw) || 0 : null;
+  const giftType = document.getElementById('guest-gift-type').value || '';
   const groupId = parseInt(document.getElementById('guest-group-id').value);
   const editId = document.getElementById('guest-edit-id').value;
   const meal = MEALS.map(m => m.key).filter(k => document.getElementById('meal-' + k).checked);
@@ -926,12 +1286,14 @@ async function saveGuest() {
     gt.count = count;
     gt.note = note;
     gt.meal = meal;
+    gt.giftAmount = giftAmount;
+    gt.giftType = giftType;
     await putGuest(gt);
     showToast('Đã cập nhật khách', 'success');
   } else {
     const guestsInGroup = allGuests.filter(g => g.groupId === groupId);
     const maxOrder = guestsInGroup.reduce((m, g) => Math.max(m, g.order || 0), 0);
-    await addGuest({ groupId, name, count, invited: false, meal, note, order: maxOrder + 1 });
+    await addGuest({ groupId, name, count, invited: false, meal, note, giftAmount, giftType, order: maxOrder + 1 });
     showToast('Đã thêm khách mới', 'success');
   }
   closeModal('modal-guest');
@@ -1165,8 +1527,8 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 // ===================== SYNC =====================
-const DEFAULT_SYNC_URL = 'https://script.google.com/macros/s/AKfycbzOn_6WI9Byj3ONbdWpy6TSppj7nxk5sb71VcNNap3iGxqiQMIoaA5nJT_V9bQIhKQyNQ/exec';
-let SYNC_URL = localStorage.getItem('syncUrl_nha_gai') || DEFAULT_SYNC_URL;
+const DEFAULT_SYNC_URL = 'https://script.google.com/macros/s/AKfycbzvsKcU3vhzqADkDRcP1nyyRotck0BIykbq9nTnSCBk8S-ZNV_2jGZGc0fxr1_Mpp9YHA/exec';
+let SYNC_URL = DEFAULT_SYNC_URL;
 const PUSH_PASSWORD = '1234567890';
 
 function updateSyncStatus(text, type) {
@@ -1195,7 +1557,7 @@ function initSyncBar() {
   if (!SYNC_URL) {
     updateSyncStatus('Chưa cấu hình sync', '');
   } else {
-    const lastSync = localStorage.getItem('lastSyncTime_nha_gai');
+    const lastSync = localStorage.getItem('lastSyncTime');
     if (lastSync) {
       updateSyncStatus('Sync lần cuối: ' + new Date(lastSync).toLocaleString('vi-VN'), 'success');
     } else {
@@ -1204,7 +1566,7 @@ function initSyncBar() {
   }
 }
 
-// Convert IndexedDB data → Sheet format (meal array → 3 boolean columns)
+// Convert IndexedDB data → Sheet format (meal array → boolean columns)
 function guestsToSheetFormat(guests) {
   return guests.map(g => ({
     id: g.id,
@@ -1216,26 +1578,47 @@ function guestsToSheetFormat(guests) {
     chieu11: (g.meal || []).includes('chieu11'),
     sang12: (g.meal || []).includes('sang12'),
     sang12_9h: (g.meal || []).includes('sang12_9h'),
+    noMeal: !!g.noMeal,
+    xe30_hn_ve:   !!g.xe30_hn_ve,
+    xe30_len_hn:  !!g.xe30_len_hn,
+    xe30_don_dau: !!g.xe30_don_dau,
+    xe45_hn_ve:   !!g.xe45_hn_ve,
+    xe45_len_hn:  !!g.xe45_len_hn,
+    xe_ve_t6:     !!g.xe_ve_t6,
+    xe_di_t6:     !!g.xe_di_t6,
+    giftAmount: g.giftAmount != null ? g.giftAmount : '',
+    giftType: g.giftType || '',
     note: g.note || '',
     order: g.order || 0
   }));
 }
 
-// Convert Sheet format → IndexedDB data (3 boolean columns → meal array)
+// Convert Sheet format → IndexedDB data (boolean columns → meal array)
 function guestsFromSheetFormat(sheetGuests) {
+  const bool = v => v === true || v === 'TRUE';
   return sheetGuests.map(g => {
     const meal = [];
-    if (g.trua11 === true || g.trua11 === 'TRUE') meal.push('trua11');
-    if (g.chieu11 === true || g.chieu11 === 'TRUE') meal.push('chieu11');
-    if (g.sang12 === true || g.sang12 === 'TRUE') meal.push('sang12');
-    if (g.sang12_9h === true || g.sang12_9h === 'TRUE') meal.push('sang12_9h');
+    if (bool(g.trua11))    meal.push('trua11');
+    if (bool(g.chieu11))   meal.push('chieu11');
+    if (bool(g.sang12))    meal.push('sang12');
+    if (bool(g.sang12_9h)) meal.push('sang12_9h');
     return {
       id: g.id,
       groupId: g.groupId,
       name: String(g.name || ''),
       count: parseInt(g.count) || 0,
-      invited: g.invited === true || g.invited === 'TRUE',
+      invited: bool(g.invited),
       meal,
+      noMeal:       bool(g.noMeal),
+      xe30_hn_ve:   bool(g.xe30_hn_ve),
+      xe30_len_hn:  bool(g.xe30_len_hn),
+      xe30_don_dau: bool(g.xe30_don_dau),
+      xe45_hn_ve:   bool(g.xe45_hn_ve),
+      xe45_len_hn:  bool(g.xe45_len_hn),
+      xe_ve_t6:     bool(g.xe_ve_t6),
+      xe_di_t6:     bool(g.xe_di_t6),
+      giftAmount: (g.giftAmount !== '' && g.giftAmount != null) ? parseInt(g.giftAmount) || null : null,
+      giftType: String(g.giftType || ''),
       note: String(g.note || ''),
       order: parseInt(g.order) || 0
     };
@@ -1268,7 +1651,7 @@ async function syncToCloud() {
     if (result.status === 'ok') {
       if (result.version) SyncEngine.localVersion = result.version;
       const now = new Date().toISOString();
-      localStorage.setItem('lastSyncTime_nha_gai', now);
+      localStorage.setItem('lastSyncTime', now);
       SyncEngine.lastSyncTime = Date.now();
       SyncEngine.setDot('green');
       updateSyncStatus('Đã đẩy lên lúc ' + new Date(now).toLocaleString('vi-VN'), 'success');
@@ -1318,7 +1701,7 @@ async function syncFromCloud() {
       }
       if (result.version) SyncEngine.localVersion = result.version;
       const now = new Date().toISOString();
-      localStorage.setItem('lastSyncTime_nha_gai', now);
+      localStorage.setItem('lastSyncTime', now);
       SyncEngine.lastSyncTime = Date.now();
       SyncEngine.setDot('green');
       updateSyncStatus('Đã kéo về lúc ' + new Date(now).toLocaleString('vi-VN'), 'success');
@@ -1341,15 +1724,10 @@ function openSyncSetup() {
 
 function saveSyncUrl() {
   const url = document.getElementById('sync-url-input').value.trim();
-  SYNC_URL = url;
-  localStorage.setItem('syncUrl_nha_gai', url);
+  SYNC_URL = url || DEFAULT_SYNC_URL;
   closeModal('modal-sync');
   initSyncBar();
-  if (url) {
-    showToast('Đã lưu URL sync!', 'success');
-  } else {
-    showToast('Đã xóa URL sync', '');
-  }
+  showToast('Đã cập nhật URL sync!', 'success');
 }
 
 async function testSyncConnection() {
@@ -1377,8 +1755,8 @@ async function testSyncConnection() {
 
 // ===================== SYNC ENGINE (Realtime) =====================
 const CLIENT_ID = (function() {
-  let id = localStorage.getItem('syncClientId_nha_gai');
-  if (!id) { id = 'c_' + Math.random().toString(36).slice(2, 10) + '_' + Date.now(); localStorage.setItem('syncClientId_nha_gai', id); }
+  let id = localStorage.getItem('syncClientId');
+  if (!id) { id = 'c_' + Math.random().toString(36).slice(2, 10) + '_' + Date.now(); localStorage.setItem('syncClientId', id); }
   return id;
 })();
 
@@ -1451,7 +1829,7 @@ const SyncEngine = {
         this.lastSyncTime = Date.now();
         this.setDot('green');
         this.updateAgo();
-        localStorage.setItem('lastSyncTime_nha_gai', new Date().toISOString());
+        localStorage.setItem('lastSyncTime', new Date().toISOString());
       } else {
         console.warn('Auto-push response:', result);
         this.setDot('red');
